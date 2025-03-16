@@ -10,7 +10,7 @@ buildscript {
   }
   dependencies {
     classpath "com.android.tools.build:gradle:8.5.2"
-
+    classpath "com.google.gms:google-services:4.4.2"
   }
 }
 
@@ -29,6 +29,7 @@ allprojects {
 
 configure(subprojects - project(':android')) {
   apply plugin: 'java-library'
+
   sourceCompatibility = 8
 
   // From https://lyze.dev/2021/04/29/libGDX-Internal-Assets-List/
