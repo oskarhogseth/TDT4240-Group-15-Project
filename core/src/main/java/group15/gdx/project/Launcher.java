@@ -1,34 +1,59 @@
 package group15.gdx.project;
 
-import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.utils.ScreenUtils;
 
-/** {@link com.badlogic.gdx.ApplicationListener} implementation shared by all platforms. */
-public class Launcher extends ApplicationAdapter {
+import group15.gdx.project.controller.GameController;
+import group15.gdx.project.model.GameSession;
+import group15.gdx.project.model.Player;
+
+public class GameScreen extends ScreenAdapter {
     private SpriteBatch batch;
-    private Texture image;
+    private BitmapFont font;
+    private GameSession gameStateData; // Data container (instead of enum-based GameState)
+    private GameController gameController;
 
-    @Override
-    public void create() {
+    public GameScreen() {
         batch = new SpriteBatch();
-        image = new Texture("libgdx.png");
+        font = new BitmapFont(); // Default font
+
+        // Initialize your game data and controller
+        gameStateData = new GameSession();
+        gameController = new GameController(gameStateData);
+
+        // Add sample players to the lobby
+        gameStateData.getLobby().addPlayer(new Player("Alice"));
+        gameStateData.getLobby().addPlayer(new Player("Bob"));
+
+        // Generate the initial set of letters
+        gameController.generateLetters();
     }
 
     @Override
-    public void render() {
-        ScreenUtils.clear(0.15f, 0.15f, 0.2f, 1f);
+    public void render(float delta) {
+        // Clear the screen with a background color
+        Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1);
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
         batch.begin();
-        batch.draw(image, 140, 210);
+        // Display the current letters on-screen
+        font.draw(batch, "Letters: " + gameStateData.getCurrentLetters(), 50, 400);
+
+        // Display player scores for demonstration
+        int y = 350;
+        for (Player p : gameStateData.getLobby().getPlayers()) {
+            font.draw(batch, p.getName() + " : " + p.getScore(), 50, y);
+            y -= 30;
+        }
         batch.end();
     }
 
     @Override
     public void dispose() {
         batch.dispose();
-        image.dispose();
+        font.dispose();
     }
 }
