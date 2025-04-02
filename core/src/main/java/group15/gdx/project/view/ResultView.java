@@ -8,7 +8,7 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import group15.gdx.project.Launcher;
 import group15.gdx.project.model.GameSession;
@@ -25,7 +25,7 @@ public class ResultView extends ScreenAdapter {
         this.game = game;
         this.session = session;
 
-        stage = new Stage(new ScreenViewport());
+        stage = new Stage(new FitViewport(480, 800));
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("vhs.json"));
 
@@ -33,34 +33,49 @@ public class ResultView extends ScreenAdapter {
     }
 
     private void setupUI() {
+        float screenWidth = stage.getViewport().getWorldWidth();
+        float screenHeight = stage.getViewport().getWorldHeight();
+        float baseFont = screenHeight / 40f;
+
         Table table = new Table();
         table.setFillParent(true);
+        table.top().padTop(screenHeight * 0.05f);
         stage.addActor(table);
 
         // Title
         Label resultsLabel = new Label("Results", skin);
-        table.add(resultsLabel).colspan(2).padBottom(20);
+        resultsLabel.setFontScale(baseFont / 18f);
+        table.add(resultsLabel).colspan(2).padBottom(screenHeight * 0.03f).center();
         table.row();
 
-        // Show scores for each player
+        // Player scores
         for (Player p : session.getLobby().getPlayers()) {
-            table.add(new Label(p.getName() + ": " + p.getScore(), skin)).colspan(2).pad(5);
+            Label scoreLabel = new Label(p.getName() + ": " + p.getScore(), skin);
+            scoreLabel.setFontScale(baseFont / 22f);
+            table.add(scoreLabel).colspan(2).pad(5).center();
             table.row();
         }
 
-        // Button to go back to Lobby (or restart)
+        table.add().expandY();
+        table.row();
+
+        // Back button
         TextButton backButton = new TextButton("Back to Lobby", skin);
+        backButton.getLabel().setFontScale(baseFont / 22f);
         backButton.addListener(event -> {
             if (!backButton.isPressed()) return false;
-
-            // For a quick replay, reset scores or create a new session
-            // session.getLobby().getPlayers().forEach(player -> player.addScore(-player.getScore()));
-
             game.setScreen(new LobbyView(game, session));
             return true;
         });
-        table.add(backButton).colspan(2).padTop(30);
+
+        table.add(backButton)
+            .colspan(2)
+            .padTop(screenHeight * 0.05f)
+            .width(screenWidth * 0.5f)
+            .height(screenHeight * 0.08f)
+            .center();
     }
+
 
     @Override
     public void render(float delta) {
