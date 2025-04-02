@@ -3,10 +3,6 @@ package group15.gdx.project.view;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
-
-import group15.gdx.project.Launcher;
-import group15.gdx.project.model.GameSession;
-
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
@@ -15,12 +11,15 @@ import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.utils.viewport.ScreenViewport;
+import com.badlogic.gdx.utils.viewport.FitViewport;
+
+import group15.gdx.project.Launcher;
+import group15.gdx.project.model.GameSession;
 
 public class GameView extends ScreenAdapter {
     private final Launcher game;
     private final GameSession session;
-    private final String activePlayerName; // The player's name (e.g., "Alice" or "Bob")
+    private final String activePlayerName;
 
     private Stage stage;
     private Skin skin;
@@ -28,14 +27,14 @@ public class GameView extends ScreenAdapter {
     private Label lettersLabel;
     private TextField wordInput;
     private Label feedbackLabel;
-    private Label playerNameLabel; // New label to display the active player
+    private Label playerNameLabel;
 
     public GameView(Launcher game, GameSession session, String activePlayerName) {
         this.game = game;
         this.session = session;
         this.activePlayerName = activePlayerName;
 
-        stage = new Stage(new ScreenViewport());
+        stage = new Stage(new FitViewport(480, 800));
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("vhs.json"));
 
@@ -43,85 +42,86 @@ public class GameView extends ScreenAdapter {
     }
 
     private void setupUI() {
-        // Create the table for central UI elements
+        float screenWidth = stage.getViewport().getWorldWidth();
+        float screenHeight = stage.getViewport().getWorldHeight();
+        float baseFont = screenHeight / 40f; // Relative font size
+
         Table table = new Table();
         table.setFillParent(true);
+        table.top().padTop(screenHeight * 0.05f);
         stage.addActor(table);
 
-        // Display current letters
+        // Title / letters
         lettersLabel = new Label("Letters: " + session.getCurrentLetters(), skin);
-        table.add(lettersLabel).colspan(2).padBottom(20);
+        lettersLabel.setFontScale(baseFont / 18f);
+        table.add(lettersLabel).colspan(2).center().padBottom(screenHeight * 0.03f);
         table.row();
 
-        // TextField for entering words
+        // Word input + Submit
         wordInput = new TextField("", skin);
         wordInput.setMessageText("Enter a word");
+        table.add(wordInput)
+            .width(screenWidth * 0.6f)
+            .height(screenHeight * 0.08f)
+            .padRight(screenWidth * 0.02f);
 
-        // Make sure the TextField can receive keyboard input
-        wordInput.setFocusTraversal(false);
-        stage.setKeyboardFocus(wordInput);
-
-        table.add(wordInput).width(200).padRight(10);
-
-        // Button to submit the word
         TextButton submitButton = new TextButton("Submit", skin);
-        table.add(submitButton).width(100);
+        submitButton.getLabel().setFontScale(baseFont / 22f);
+        table.add(submitButton)
+            .width(screenWidth * 0.3f)
+            .height(screenHeight * 0.08f);
         table.row();
 
-        // Label to show feedback (accepted/invalid)
+        // Feedback
         feedbackLabel = new Label("", skin);
-        table.add(feedbackLabel).colspan(2).padTop(20);
+        feedbackLabel.setFontScale(baseFont / 24f);
+        table.add(feedbackLabel).colspan(2).center().padTop(screenHeight * 0.03f);
         table.row();
 
-        // Button to end game and go to results
+        // End Game button
         TextButton endButton = new TextButton("End Game", skin);
-        endButton.addListener(event -> {
-            if (!endButton.isPressed()) return false;
-            game.setScreen(new ResultView(game, session));
-            return true;
+        endButton.getLabel().setFontScale(baseFont / 22f);
+        endButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new ResultView(game, session));
+            }
         });
-        table.add(endButton).colspan(2).padTop(30);
+        table.add(endButton)
+            .colspan(2)
+            .center()
+            .padTop(screenHeight * 0.05f)
+            .width(screenWidth * 0.5f)
+            .height(screenHeight * 0.08f);
 
-        // Replace your old submit listener with a ClickListener
+        // Submit listener
         submitButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                // Get the typed word from the TextField and trim extra spaces.
                 String typedWord = wordInput.getText().trim();
-
-                // Check if the field is empty.
                 if (typedWord.isEmpty()) {
                     feedbackLabel.setText("No word entered.");
                     return;
                 }
-
-                // Submit the word for the active player and capture the result.
                 boolean result = session.getGameController().submitWord(activePlayerName, typedWord);
-
-                // Create a debug message indicating accepted or rejected.
-                String debugMessage = "Typed word is: [" + typedWord + "] " + (result ? "accepted" : "rejected");
-                System.out.println(debugMessage);
-
-                // Update the UI with feedback.
                 feedbackLabel.setText(result ? "Word accepted!" : "Invalid word!");
-                wordInput.setText(""); // Clear the field after submission.
+                wordInput.setText("");
             }
         });
 
-        // Fixed-position label to indicate the current player (top-left corner)
+        // Player name label (floating top-left)
         playerNameLabel = new Label("Player: " + activePlayerName, skin);
-        playerNameLabel.setPosition(10, Gdx.graphics.getHeight() - playerNameLabel.getHeight() - 10);
+        playerNameLabel.setFontScale(baseFont / 22f);
+        playerNameLabel.setPosition(10, screenHeight - (screenHeight * 0.05f));
         stage.addActor(playerNameLabel);
     }
+
 
     @Override
     public void render(float delta) {
         Gdx.gl.glClearColor(0.15f, 0.15f, 0.2f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
-
-        // Update the letters label if needed
         lettersLabel.setText("Letters: " + session.getCurrentLetters());
-
         stage.act(delta);
         stage.draw();
     }
