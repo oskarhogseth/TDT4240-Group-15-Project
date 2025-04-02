@@ -18,7 +18,7 @@ public class GameController {
     private GameSession gameSession;
     private Random random = new Random();
 
-    FileHandle file = Gdx.files.internal("assets/FrequentWords.txt");
+    FileHandle file = Gdx.files.internal("FrequentWords.txt");
     // Read the entire file into a single string
     String dictionaryData = file.readString();
     // Split on new lines to get individual words
