@@ -135,12 +135,4 @@ public class GameController {
         }
         return null;
     }
-
-    public int getCurrentScore(String activePlayerName) {
-        Player player = findPlayer(activePlayerName);
-        if (player != null) {
-            return player.getScore();
-        }
-        return 0;
-    }
 }
