@@ -83,7 +83,8 @@ public class GameView extends ScreenAdapter {
         mainTable.row();
 
         // Points display
-        pointsLabel = new Label("YOU HAVE " +  "add score here" + " POINTS", skin);
+        //Add real time points on the x
+        pointsLabel = new Label("YOU HAVE " + "x" + " POINTS", skin);
         pointsLabel.setFontScale(baseFont / 20f);
         mainTable.add(pointsLabel).padTop(30).padBottom(40);
         mainTable.row();
