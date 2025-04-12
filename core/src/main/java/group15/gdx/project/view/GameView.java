@@ -25,8 +25,6 @@ public class GameView extends ScreenAdapter {
     private Stage stage;
     private Skin skin;
 
-    private int currentScore = 0;
-
     private Label timerLabel;
     private Label pointsLabel;
     private Label selectedWordLabel;
@@ -86,7 +84,7 @@ public class GameView extends ScreenAdapter {
 
         // Points display
         //Add real time points on the x
-        pointsLabel = new Label("YOU HAVE " + this.currentScore + " POINTS", skin);
+        pointsLabel = new Label("YOU HAVE " + player.getScore() + " POINTS", skin);
         pointsLabel.setFontScale(baseFont / 20f);
         mainTable.add(pointsLabel).padTop(30).padBottom(40);
         mainTable.row();

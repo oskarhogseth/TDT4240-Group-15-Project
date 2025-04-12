@@ -18,8 +18,6 @@ public class GameController {
     private GameSession gameSession;
     private Random random = new Random();
 
-    int score = 0;
-
     FileHandle file = Gdx.files.internal("FrequentWords.txt");
     // Read the entire file into a single string
     String dictionaryData = file.readString();
