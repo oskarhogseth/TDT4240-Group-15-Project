@@ -72,7 +72,7 @@ public class LobbyView extends ScreenAdapter {
         startButton.addListener(event -> {
             if (!startButton.isPressed()) return false;
             gameSession.getGameController().generateLetters();
-            game.setScreen(new GameView(game, gameSession, gameSession.getLobby().getPlayers().get(0).getName()));
+            game.setScreen(new GameView(game, gameSession, gameSession.getLobby().getPlayers().get(0)));
             return true;
         });
 

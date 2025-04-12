@@ -18,6 +18,8 @@ public class GameController {
     private GameSession gameSession;
     private Random random = new Random();
 
+    int score = 0;
+
     FileHandle file = Gdx.files.internal("FrequentWords.txt");
     // Read the entire file into a single string
     String dictionaryData = file.readString();
@@ -87,7 +89,7 @@ public class GameController {
     }
 
     // Validate and process a word submission
-    public boolean submitWord(String playerName, String word) {
+    public boolean submitWord(Player player, String word) {
         // 1. Check if the letters can form the word
         if (!canFormWord(gameSession.getCurrentLetters(), word)) {
             return false;
@@ -99,7 +101,6 @@ public class GameController {
         }
 
         // 3. If valid, award points
-        Player player = findPlayer(playerName);
         if (player != null) {
             player.addScore(word.length());
             return true;
