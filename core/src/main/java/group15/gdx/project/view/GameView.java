@@ -72,10 +72,9 @@ public class GameView extends ScreenAdapter {
         });
 
         // Timer label with clock icon
-        timerLabel = new Label("37 SECONDS LEFT...", skin);
+        timerLabel = new Label( "", skin);
         timerLabel.setFontScale(baseFont / 18f);
 
-        timerSection.add(new Label("⏱", skin)).padRight(10);
         timerSection.add(timerLabel).expandX();
         timerSection.add(closeButton).size(40, 40).padRight(20);
 
