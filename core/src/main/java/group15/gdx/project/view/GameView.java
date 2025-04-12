@@ -15,11 +15,12 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import group15.gdx.project.Launcher;
 import group15.gdx.project.model.GameSession;
+import group15.gdx.project.model.Player;
 
 public class GameView extends ScreenAdapter {
     private final Launcher game;
     private final GameSession session;
-    private final String activePlayerName;
+    private final Player player;
 
     private Stage stage;
     private Skin skin;
@@ -36,10 +37,10 @@ public class GameView extends ScreenAdapter {
     private float timeLeft = 60; // 60 seconds countdown
     private boolean timerActive = true;
 
-    public GameView(Launcher game, GameSession session, String activePlayerName) {
+    public GameView(Launcher game, GameSession session, Player player) {
         this.game = game;
         this.session = session;
-        this.activePlayerName = activePlayerName;
+        this.player = player;
 
         stage = new Stage(new FitViewport(480, 800));
         Gdx.input.setInputProcessor(stage);
@@ -83,7 +84,7 @@ public class GameView extends ScreenAdapter {
 
         // Points display
         //Add real time points on the x
-        pointsLabel = new Label("YOU HAVE " + "x" + " POINTS", skin);
+        pointsLabel = new Label("YOU HAVE " + player.getScore() + " POINTS", skin);
         pointsLabel.setFontScale(baseFont / 20f);
         mainTable.add(pointsLabel).padTop(30).padBottom(40);
         mainTable.row();
@@ -111,8 +112,11 @@ public class GameView extends ScreenAdapter {
                     feedbackLabel.setText("No word entered.");
                     return;
                 }
-                boolean result = session.getGameController().submitWord(activePlayerName, typedWord);
+                boolean result = session.getGameController().submitWord(player, typedWord);
                 feedbackLabel.setText(result ? "Word accepted!" : "Invalid word!");
+                if (result) {
+                    updateScore();
+                }
                 resetWord();
             }
         });
@@ -209,6 +213,10 @@ public class GameView extends ScreenAdapter {
 
         stage.act(delta);
         stage.draw();
+    }
+
+    public void updateScore() {
+        pointsLabel.setText("YOU HAVE " + player.getScore() + " POINTS");
     }
 
     @Override
