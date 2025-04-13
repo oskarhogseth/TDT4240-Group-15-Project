@@ -15,6 +15,9 @@ import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
 
 public class ResultView extends ScreenAdapter {
+
+    private static final String RESULTS = "Results";
+    private static final String BACK_TO_LOBBY = "Back to lobby:";
     private final Launcher game;
     private final GameSession session;
 
@@ -43,7 +46,7 @@ public class ResultView extends ScreenAdapter {
         stage.addActor(table);
 
         // Title
-        Label resultsLabel = new Label("Results", skin);
+        Label resultsLabel = new Label(RESULTS, skin);
         resultsLabel.setFontScale(baseFont / 18f);
         table.add(resultsLabel).colspan(2).padBottom(screenHeight * 0.03f).center();
         table.row();
@@ -60,7 +63,7 @@ public class ResultView extends ScreenAdapter {
         table.row();
 
         // Back button
-        TextButton backButton = new TextButton("Back to Lobby", skin);
+        TextButton backButton = new TextButton(BACK_TO_LOBBY, skin);
         backButton.getLabel().setFontScale(baseFont / 22f);
         backButton.addListener(event -> {
             if (!backButton.isPressed()) return false;
