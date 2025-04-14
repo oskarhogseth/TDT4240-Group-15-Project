@@ -1,6 +1,4 @@
 ExpandedGroupedDictionary_3_7_27k.txt
-FrequentWords.txt
-GroupedDictionary.txt
 background.png
 backgroundblocks.png
 backgroundx.png

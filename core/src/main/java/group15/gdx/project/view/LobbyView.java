@@ -15,6 +15,10 @@ import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
 
 public class LobbyView extends ScreenAdapter {
+
+    private static final String WELCOME_MESSAGE = "Welcome to the Lobby!";
+    private static final String PLAYERS_IN_LOBBY = "Players in lobby:";
+    private static final String START_GAME = "Start Game";
     private final Launcher game;
     private final GameSession gameSession;
 
@@ -24,9 +28,6 @@ public class LobbyView extends ScreenAdapter {
     public LobbyView(Launcher game, GameSession session) {
         this.game = game;
         this.gameSession = session;
-
-        session.getLobby().addPlayer(new Player("Alice"));
-        session.getLobby().addPlayer(new Player("Bob"));
 
         stage = new Stage(new FitViewport(480, 800)); // Scales correctly across devices
         Gdx.input.setInputProcessor(stage);
@@ -46,12 +47,12 @@ public class LobbyView extends ScreenAdapter {
 
         float baseFont = screenHeight / 40f; // Responsive font size
 
-        Label titleLabel = new Label("Welcome to the Lobby!", skin);
+        Label titleLabel = new Label(WELCOME_MESSAGE, skin);
         titleLabel.setFontScale(baseFont / 20f); // Make title readable but not too big
         table.add(titleLabel).colspan(2).center().padBottom(screenHeight * 0.03f);
         table.row();
 
-        Label instructionsLabel = new Label("Players in lobby:", skin);
+        Label instructionsLabel = new Label(PLAYERS_IN_LOBBY, skin);
         instructionsLabel.setFontScale(baseFont / 22f);
         table.add(instructionsLabel).colspan(2).center().padBottom(screenHeight * 0.02f);
         table.row();
@@ -66,7 +67,7 @@ public class LobbyView extends ScreenAdapter {
         table.add().expandY();
         table.row();
 
-        TextButton startButton = new TextButton("Start Game", skin);
+        TextButton startButton = new TextButton(START_GAME, skin);
         startButton.getLabel().setFontScale(baseFont / 22f);
         startButton.setColor(0.8f, 0.2f, 0.2f, 1);
         startButton.addListener(event -> {
