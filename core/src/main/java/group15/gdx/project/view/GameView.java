@@ -18,14 +18,6 @@ import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
 
 public class GameView extends ScreenAdapter {
-
-    private static final String ENTER_WORD = "ENTER WORD";
-    private static final String POINTS_LABEL = "YOU HAVE 0 POINTS";
-    private static final String FEEDBACK_LABEL = "No word entered.";
-    private static final String CLOSE_BUTTON = "X";
-    private static final String WORD_ACCEPT = "Word accepted!";
-    private static final String INVALID_WORD = "Invalid word!";
-    private static final String SECONDS_LEFT = " SECONDS LEFT...";
     private final Launcher game;
     private final GameSession session;
     private final Player player;
@@ -72,7 +64,7 @@ public class GameView extends ScreenAdapter {
         timerSection.top().padTop(20);
 
         // Close button (X) - top right
-        TextButton closeButton = new TextButton(CLOSE_BUTTON, skin);
+        TextButton closeButton = new TextButton("X", skin);
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -80,7 +72,7 @@ public class GameView extends ScreenAdapter {
             }
         });
 
-        // Timer label
+        // Timer label with clock icon
         timerLabel = new Label( "", skin);
         timerLabel.setFontScale(baseFont / 18f);
 
@@ -91,7 +83,8 @@ public class GameView extends ScreenAdapter {
         mainTable.row();
 
         // Points display
-        pointsLabel = new Label(POINTS_LABEL, skin);
+        //Add real time points on the x
+        pointsLabel = new Label("YOU HAVE " + player.getScore() + " POINTS", skin);
         pointsLabel.setFontScale(baseFont / 20f);
         mainTable.add(pointsLabel).padTop(30).padBottom(40);
         mainTable.row();
@@ -109,18 +102,18 @@ public class GameView extends ScreenAdapter {
         createLetterButtonsPyramid(mainTable, screenWidth);
 
         // Enter word button
-        TextButton enterWordButton = new TextButton(ENTER_WORD, skin);
+        TextButton enterWordButton = new TextButton("ENTER WORD", skin);
         enterWordButton.getLabel().setFontScale(baseFont / 22f);
         enterWordButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 String typedWord = currentWord.toString().trim();
                 if (typedWord.isEmpty()) {
-                    feedbackLabel.setText(FEEDBACK_LABEL);
+                    feedbackLabel.setText("No word entered.");
                     return;
                 }
-                boolean result = session.getGameController().submitWord(player, typedWord);
-                feedbackLabel.setText(result ? WORD_ACCEPT : INVALID_WORD);
+                boolean result = session.getGameController().submitWord(player.getName(), typedWord);
+                feedbackLabel.setText(result ? "Word accepted!" : "Invalid word!");
                 if (result) {
                     updateScore();
                 }
@@ -141,23 +134,30 @@ public class GameView extends ScreenAdapter {
     }
 
     private void createLetterButtonsPyramid(Table mainTable, float screenWidth) {
-        float buttonSize = screenWidth / 8;
-        // First row - 1 button
-        addLetterButtonRow(0, 0, buttonSize, mainTable);
-        // Second row - 2 buttons
-        addLetterButtonRow(1, 2, buttonSize, mainTable);
-        // Third row - 3 buttons
-        addLetterButtonRow(3, 5, buttonSize, mainTable);
-    }
-
-    private void addLetterButtonRow(int startIndex, int endIndex, float buttonSize, Table mainTable) {
-        Table row = new Table();
-        for (int i = startIndex; i <= endIndex; i++) {
-            char letter = session.getCurrentLetters().charAt(i);
-            addLetterButton(row, letter, buttonSize);
+        String currentLetters = session.getCurrentLetters();
+        if (currentLetters == null || currentLetters.isEmpty()) {
+            return;
         }
-        mainTable.add(row);
-        mainTable.row();
+        char[] letters = currentLetters.toCharArray();
+        float buttonSize = screenWidth / 8f;
+
+        int totalLetters = letters.length;
+        int index = 0;
+        int rowCount = 1;  // Start with 1 button in the first row
+
+        while (index < totalLetters) {
+            Table row = new Table();
+            // Calculate how many buttons to add in this row.
+            // If there aren’t enough letters for rowCount buttons, add the remainder.
+            int countInRow = Math.min(rowCount, totalLetters - index);
+            for (int i = 0; i < countInRow; i++) {
+                addLetterButton(row, letters[index], buttonSize);
+                index++;
+            }
+            mainTable.add(row);
+            mainTable.row();
+            rowCount++;
+        }
     }
 
     private void addLetterButton(Table row, char letter, float size) {
@@ -196,7 +196,7 @@ public class GameView extends ScreenAdapter {
                 timerActive = false;
                 game.setScreen(new ResultView(game, session));
             }
-            timerLabel.setText((int)timeLeft + SECONDS_LEFT);
+            timerLabel.setText((int)timeLeft + " SECONDS LEFT...");
         }
     }
 
