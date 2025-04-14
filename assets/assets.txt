@@ -1,4 +1,4 @@
-ExpandedGroupedDictionary_3_7_27k.txt
+ExpandedGroupedDictionary_3_7_10k_v2.txt
 background.png
 backgroundblocks.png
 backgroundx.png
