@@ -38,7 +38,7 @@ public class GameController {
         FileHandle file = Gdx.files.internal(fileName);
         String content = file.readString();
 
-        // Spliting file content into lines.
+        // Splitting file content into lines.
         String[] lines = content.split("\\r?\\n");
         for (String line : lines) {
             line = line.trim();
@@ -79,6 +79,7 @@ public class GameController {
             letters[swapIdx] = temp;
         }
         String scrambled = new String(letters);
+
         gameSession.setCurrentLetters(scrambled);
         gameSession.setActiveSortedKey(sortedKey);
         gameSession.getGuessedWords().clear();

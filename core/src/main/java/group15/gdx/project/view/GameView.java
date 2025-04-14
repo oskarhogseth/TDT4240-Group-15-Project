@@ -26,6 +26,8 @@ public class GameView extends ScreenAdapter {
     private Skin skin;
 
     private Label timerLabel;
+
+    private Label roundLabel;
     private Label pointsLabel;
     private Label selectedWordLabel;
     private Label feedbackLabel;
@@ -87,6 +89,12 @@ public class GameView extends ScreenAdapter {
         pointsLabel = new Label("YOU HAVE " + player.getScore() + " POINTS", skin);
         pointsLabel.setFontScale(baseFont / 20f);
         mainTable.add(pointsLabel).padTop(30).padBottom(40);
+        mainTable.row();
+
+        // Round display
+        roundLabel = new Label("Round " + session.getCurrentRound() + " of " + session.getTotalRounds(), skin);
+        roundLabel.setFontScale(baseFont / 20f);
+        mainTable.add(roundLabel).padBottom(20);
         mainTable.row();
 
         // Word display field (white rectangle in the image)
@@ -194,7 +202,18 @@ public class GameView extends ScreenAdapter {
             if (timeLeft <= 0) {
                 timeLeft = 0;
                 timerActive = false;
-                game.setScreen(new ResultView(game, session));
+                if (session.getCurrentRound() < session.getTotalRounds()) {
+                    // Advance to the next round and update the display.
+                    session.nextRound();
+                    session.getGameController().generateLetters();
+                    // Reset timer and re-enable it
+                    timeLeft = 45; // Timer
+                    timerActive = true;
+                    updateRoundDisplay();  // Update the round display label.
+                    System.out.println("Round " + session.getCurrentRound() + " begins.");
+                } else {
+                    game.setScreen(new ResultView(game, session));
+                }
             }
             timerLabel.setText((int)timeLeft + " SECONDS LEFT...");
         }
@@ -218,6 +237,10 @@ public class GameView extends ScreenAdapter {
 
     public void updateScore() {
         pointsLabel.setText("YOU HAVE " + player.getScore() + " POINTS");
+    }
+
+    private void updateRoundDisplay() {
+        roundLabel.setText("Round " + session.getCurrentRound() + " of " + session.getTotalRounds());
     }
 
     @Override
