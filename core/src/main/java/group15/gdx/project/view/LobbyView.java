@@ -29,9 +29,6 @@ public class LobbyView extends ScreenAdapter {
         this.game = game;
         this.gameSession = session;
 
-        session.getLobby().addPlayer(new Player("Alice"));
-        session.getLobby().addPlayer(new Player("Bob"));
-
         stage = new Stage(new FitViewport(480, 800)); // Scales correctly across devices
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("vhs.json"));

@@ -2,6 +2,7 @@ package group15.gdx.project;
 
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.view.LobbyView;
+import group15.gdx.project.view.LogInView;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
@@ -17,7 +18,7 @@ public class Launcher extends Game implements GestureListener {
     public void create() {
         session = new GameSession();
         Gdx.input.setInputProcessor(new GestureDetector(this)); // Enable touch input
-        setScreen(new LobbyView(this, session));
+        setScreen(new LogInView(this, session));
     }
 
     @Override
