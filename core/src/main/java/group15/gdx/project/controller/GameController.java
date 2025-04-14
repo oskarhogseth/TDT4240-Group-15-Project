@@ -30,7 +30,7 @@ public class GameController {
 
     public GameController(GameSession session) {
         this.gameSession = session;
-        loadDictionary("ExpandedGroupedDictionary_3_7_27k.txt");
+        loadDictionary("ExpandedGroupedDictionary_3_7_10k_v2.txt");
     }
 
     private void loadDictionary(String fileName) {

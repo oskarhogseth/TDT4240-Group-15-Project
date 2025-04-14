@@ -120,6 +120,13 @@ public class GameView extends ScreenAdapter {
                     feedbackLabel.setText("No word entered.");
                     return;
                 }
+                // Check if the word was already guessed.
+                if (session.getGuessedWords().contains(typedWord.toLowerCase())) {
+                    feedbackLabel.setText("Word already guessed!");
+                    resetWord();
+                    return;
+                }
+
                 boolean result = session.getGameController().submitWord(player.getName(), typedWord);
                 feedbackLabel.setText(result ? "Word accepted!" : "Invalid word!");
                 if (result) {
@@ -146,9 +153,18 @@ public class GameView extends ScreenAdapter {
         if (currentLetters == null || currentLetters.isEmpty()) {
             return;
         }
-        char[] letters = currentLetters.toCharArray();
-        float buttonSize = screenWidth / 8f;
 
+        // Deduplicate letters while preserving order.
+        StringBuilder deduced = new StringBuilder();
+        for (char c : currentLetters.toCharArray()) {
+            if (deduced.indexOf(String.valueOf(c)) == -1) {
+                deduced.append(c);
+            }
+        }
+        // Use the deduplicated letters for display.
+        char[] letters = deduced.toString().toCharArray();
+
+        float buttonSize = screenWidth / 8f;
         int totalLetters = letters.length;
         int index = 0;
         int rowCount = 1;  // Start with 1 button in the first row
