@@ -112,7 +112,7 @@ public class GameView extends ScreenAdapter {
                     feedbackLabel.setText("No word entered.");
                     return;
                 }
-                boolean result = session.getGameController().submitWord(player, typedWord);
+                boolean result = session.getGameController().submitWord(player.getName(), typedWord);
                 feedbackLabel.setText(result ? "Word accepted!" : "Invalid word!");
                 if (result) {
                     updateScore();
@@ -134,29 +134,30 @@ public class GameView extends ScreenAdapter {
     }
 
     private void createLetterButtonsPyramid(Table mainTable, float screenWidth) {
-        char[] letters = session.getCurrentLetters().toCharArray();
-        float buttonSize = screenWidth / 8;
+        String currentLetters = session.getCurrentLetters();
+        if (currentLetters == null || currentLetters.isEmpty()) {
+            return;
+        }
+        char[] letters = currentLetters.toCharArray();
+        float buttonSize = screenWidth / 8f;
 
-        // First row - 1 button
-        Table row1 = new Table();
-        addLetterButton(row1, letters[0], buttonSize);
-        mainTable.add(row1);
-        mainTable.row();
+        int totalLetters = letters.length;
+        int index = 0;
+        int rowCount = 1;  // Start with 1 button in the first row
 
-        // Second row - 2 buttons
-        Table row2 = new Table();
-        addLetterButton(row2, letters[1], buttonSize);
-        addLetterButton(row2, letters[2], buttonSize);
-        mainTable.add(row2);
-        mainTable.row();
-
-        // Third row - 3 buttons
-        Table row3 = new Table();
-        addLetterButton(row3, letters[3], buttonSize);
-        addLetterButton(row3, letters[4], buttonSize);
-        addLetterButton(row3, letters[5], buttonSize);
-        mainTable.add(row3);
-        mainTable.row();
+        while (index < totalLetters) {
+            Table row = new Table();
+            // Calculate how many buttons to add in this row.
+            // If there aren’t enough letters for rowCount buttons, add the remainder.
+            int countInRow = Math.min(rowCount, totalLetters - index);
+            for (int i = 0; i < countInRow; i++) {
+                addLetterButton(row, letters[index], buttonSize);
+                index++;
+            }
+            mainTable.add(row);
+            mainTable.row();
+            rowCount++;
+        }
     }
 
     private void addLetterButton(Table row, char letter, float size) {
