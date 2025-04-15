@@ -1,32 +1,42 @@
 package group15.gdx.project.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Player {
 
-    private String name;
-    private int score;
+    private String uid;
+    private String nickname;
+    private int score = 0;
 
-    public Player(String name) {
-        this.name = name;
-        this.score = score;
+    public Player(String uid, String nickname) {
+        this.uid = uid;
+        this.nickname = nickname;
+    }
+
+    public String getUid() {
+        return uid;
+    }
+
+    public String getNickname() {
+        return nickname;
     }
 
     public String getName() {
-        return name;
+        return nickname;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public int getScore() {
+        return score;
     }
 
-    public int getScore(){
-        return this.score;
+    public void addScore(int amount) {
+        this.score += amount;
     }
 
-    public void setScore(int score){
-        this.score = score;
-    }
-
-    public void addScore(int points) {
-        this.score += points;
+    public Map<String, Object> toMap() {
+        Map<String, Object> map = new HashMap<>();
+        map.put("nickname", nickname);
+        return map;
     }
 }
