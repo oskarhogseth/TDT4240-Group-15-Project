@@ -63,7 +63,13 @@ public class GameController {
         }
         return sb.toString();
     }
-
+    /**
+     * Count how many words in the dictionary can be formed from the given letter set.
+     *
+     * @param letters Candidate letter set.
+     * @param dictionary List of valid words.
+     * @return The count of formable words.
+     */
     private int countFormableWords(String letters, List<String> dictionary) {
         int count = 0;
         for (String word : dictionary) {
@@ -99,7 +105,13 @@ public class GameController {
         }
         return false;
     }
-
+    /**
+     * Check if a word can be formed from the given set of letters.
+     *
+     * @param letters The available letters.
+     * @param word The word to form.
+     * @return True if the word can be formed; false otherwise.
+     */
     private boolean canFormWord(String letters, String word) {
         String tempLetters = letters.toLowerCase();
         for (char c : word.toLowerCase().toCharArray()) {

@@ -31,7 +31,7 @@ public class Launcher extends Game implements GestureListener {
         setScreen(new LogInView(this, session, controller)); // Pass controller to LogInView
     }
 
-    // Gesture methods (keep as before)
+
     @Override public boolean touchDown(float x, float y, int pointer, int button) { return false; }
     @Override public boolean tap(float x, float y, int count, int button) { return true; }
     @Override public boolean fling(float velocityX, float velocityY, int button) { return true; }

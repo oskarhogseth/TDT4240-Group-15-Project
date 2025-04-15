@@ -14,7 +14,7 @@ public class GameSession {
     public GameSession() {
         this.lobby = new GameLobby();
         this.currentLetters = new ArrayList<>();
-        this.gameController = new GameController(this); // Pass GameSession to GameController
+        this.gameController = new GameController(this);
     }
 
     public GameSession(Player player, GameLobby lobby) {
