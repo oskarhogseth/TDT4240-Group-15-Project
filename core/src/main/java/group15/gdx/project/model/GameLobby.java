@@ -1,4 +1,7 @@
 package group15.gdx.project.model;
+import static com.badlogic.gdx.math.MathUtils.random;
+
+// Kilde: https://stackoverflow.com/questions/33847225/generating-a-random-pin-of-5-digits
 
 import java.security.SecureRandom;
 import java.util.ArrayList;
@@ -41,4 +44,9 @@ public class GameLobby {
         int num = random.nextInt(100000); // 00000 - 99999
         return String.format("%05d", num); // Ensures 5 digits with leading zeroes
     }
+
+    //public String getGamePin() {
+    //    return gamePin;
+    //}
+
 }

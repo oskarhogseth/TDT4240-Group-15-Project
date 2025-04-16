@@ -5,146 +5,258 @@ import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import group15.gdx.project.Launcher;
-import group15.gdx.project.controller.GameController;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
 
-import java.util.ArrayList;
-import java.util.List;
-
 public class GameView extends ScreenAdapter {
-
     private final Launcher game;
     private final GameSession session;
-    private final GameController controller;
-    private final Player localPlayer;
+    private final Player player;
 
     private Stage stage;
     private Skin skin;
-    private StringBuilder currentWord;
-    private Label wordDisplay;
-    private Table letterTable;
+
+    private Label timerLabel;
+
+    private Label roundLabel;
+    private Label pointsLabel;
+    private Label selectedWordLabel;
+    private Label feedbackLabel;
+
+    private StringBuilder currentWord = new StringBuilder();
+    private Array<TextButton> letterButtons = new Array<>();
+
+    // Timer properties
+    private float timeLeft = 60; // 60 seconds countdown
+    private boolean timerActive = true;
 
     public GameView(Launcher game, GameSession session, Player player) {
         this.game = game;
         this.session = session;
-        this.localPlayer = player;
-        this.controller = session.getGameController();
-        this.currentWord = new StringBuilder();
+        this.player = player;
 
         stage = new Stage(new FitViewport(480, 800));
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("vhs.json"));
 
-        controller.generateLetters();
         setupUI();
     }
 
     private void setupUI() {
         float screenWidth = stage.getViewport().getWorldWidth();
         float screenHeight = stage.getViewport().getWorldHeight();
-        float baseFont = screenHeight / 40f;
+        float baseFont = screenHeight / 40f; // Relative font size
 
-        Table rootTable = new Table();
-        rootTable.setFillParent(true);
-        rootTable.top().padTop(screenHeight * 0.05f);
-        stage.addActor(rootTable);
+        Table mainTable = new Table();
+        mainTable.setFillParent(true);
+        mainTable.top();
+        stage.addActor(mainTable);
 
-        // Title
-        Label title = new Label("Form a Word", skin);
-        title.setFontScale(baseFont / 20f);
-        rootTable.add(title).colspan(2).center().padBottom(screenHeight * 0.03f);
-        rootTable.row();
+        // Timer section
+        Table timerSection = new Table();
+        timerSection.top().padTop(20);
 
-        // Word being built
-        wordDisplay = new Label("", skin);
-        wordDisplay.setFontScale(baseFont / 18f);
-        rootTable.add(wordDisplay).colspan(2).center().padBottom(screenHeight * 0.03f);
-        rootTable.row();
-
-        // Letter tiles
-        letterTable = new Table();
-        rootTable.add(letterTable).colspan(2).center().padBottom(screenHeight * 0.03f);
-        rootTable.row();
-
-        createLetterButtons();
-
-        // Enter & Clear buttons
-        TextButton enterButton = new TextButton("Enter Word", skin);
-        TextButton clearButton = new TextButton("Clear", skin);
-
-        enterButton.getLabel().setFontScale(baseFont / 24f);
-        clearButton.getLabel().setFontScale(baseFont / 24f);
-
-        enterButton.addListener(new ClickListener() {
+        // Close button (X) - top right
+        TextButton closeButton = new TextButton("X", skin);
+        closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                String submitted = currentWord.toString();
-                boolean valid = controller.submitWord(localPlayer, submitted);
-                if (valid) {
-                    Gdx.app.log("Word Submission", "Accepted: " + submitted);
-                    currentWord.setLength(0);
-                    wordDisplay.setText("");
-                    createLetterButtons();
-                } else {
-                    Gdx.app.log("Word Submission", "Rejected: " + submitted);
+                game.setScreen(new ResultView(game, session));
+            }
+        });
+
+        // Timer label with clock icon
+        timerLabel = new Label( "", skin);
+        timerLabel.setFontScale(baseFont / 18f);
+
+        timerSection.add(timerLabel).expandX();
+        timerSection.add(closeButton).size(40, 40).padRight(20);
+
+        mainTable.add(timerSection).width(screenWidth).height(screenHeight * 0.1f);
+        mainTable.row();
+
+        // Points display
+        //Add real time points on the x
+        pointsLabel = new Label("YOU HAVE " + player.getScore() + " POINTS", skin);
+        pointsLabel.setFontScale(baseFont / 20f);
+        mainTable.add(pointsLabel).padTop(30).padBottom(40);
+        mainTable.row();
+
+        // Round display
+        roundLabel = new Label("Round " + session.getCurrentRound() + " of " + session.getTotalRounds(), skin);
+        roundLabel.setFontScale(baseFont / 20f);
+        mainTable.add(roundLabel).padBottom(20);
+        mainTable.row();
+
+        // Word display field (white rectangle in the image)
+        selectedWordLabel = new Label("", skin);
+        selectedWordLabel.setFontScale(baseFont / 18f);
+        Table wordDisplayTable = new Table();
+        wordDisplayTable.add(selectedWordLabel).pad(15);
+
+        mainTable.add(wordDisplayTable).width(screenWidth * 0.7f).height(50).padBottom(30);
+        mainTable.row();
+
+        // Letter buttons in pyramid arrangement
+        createLetterButtonsPyramid(mainTable, screenWidth);
+
+        // Enter word button
+        TextButton enterWordButton = new TextButton("ENTER WORD", skin);
+        enterWordButton.getLabel().setFontScale(baseFont / 22f);
+        enterWordButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                String typedWord = currentWord.toString().trim();
+                if (typedWord.isEmpty()) {
+                    feedbackLabel.setText("No word entered.");
+                    return;
                 }
+                // Check if the word was already guessed.
+                if (session.getGuessedWords().contains(typedWord.toLowerCase())) {
+                    feedbackLabel.setText("Word already guessed!");
+                    resetWord();
+                    return;
+                }
+
+                boolean result = session.getGameController().submitWord(player.getName(), typedWord);
+                feedbackLabel.setText(result ? "Word accepted!" : "Invalid word!");
+                if (result) {
+                    updateScore();
+                }
+                resetWord();
             }
         });
 
-        clearButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                currentWord.setLength(0);
-                wordDisplay.setText("");
-                createLetterButtons();
-            }
-        });
+        mainTable.add(enterWordButton)
+            .width(screenWidth * 0.5f)
+            .height(60)
+            .padTop(30);
+        mainTable.row();
 
-        Table buttonTable = new Table();
-        buttonTable.add(enterButton).padRight(30).width(screenWidth * 0.35f).height(screenHeight * 0.07f);
-        buttonTable.add(clearButton).width(screenWidth * 0.35f).height(screenHeight * 0.07f);
-        rootTable.add(buttonTable).colspan(2).center();
+        // Feedback label
+        feedbackLabel = new Label("", skin);
+        feedbackLabel.setFontScale(baseFont / 24f);
+        mainTable.add(feedbackLabel).padTop(20);
     }
 
-    private void createLetterButtons() {
-        letterTable.clear();
-        List<Character> letters = session.getCurrentLetters();
-        int columns = 4;
-        int count = 0;
+    private void createLetterButtonsPyramid(Table mainTable, float screenWidth) {
+        String currentLetters = session.getCurrentLetters();
+        if (currentLetters == null || currentLetters.isEmpty()) {
+            return;
+        }
 
-        for (Character letter : letters) {
-            final char c = letter;
-            TextButton button = new TextButton(String.valueOf(c), skin);
-            button.getLabel().setFontScale(1.5f);
-            button.pad(10);
+        // Deduplicate letters while preserving order.
+        StringBuilder deduced = new StringBuilder();
+        for (char c : currentLetters.toCharArray()) {
+            if (deduced.indexOf(String.valueOf(c)) == -1) {
+                deduced.append(c);
+            }
+        }
+        // Use the deduplicated letters for display.
+        char[] letters = deduced.toString().toCharArray();
 
-            button.addListener(new ClickListener() {
-                @Override
-                public void clicked(InputEvent event, float x, float y) {
-                    currentWord.append(c);
-                    wordDisplay.setText(currentWord.toString());
+        float buttonSize = screenWidth / 8f;
+        int totalLetters = letters.length;
+        int index = 0;
+        int rowCount = 1;  // Start with 1 button in the first row
+
+        while (index < totalLetters) {
+            Table row = new Table();
+            // Calculate how many buttons to add in this row.
+            // If there aren’t enough letters for rowCount buttons, add the remainder.
+            int countInRow = Math.min(rowCount, totalLetters - index);
+            for (int i = 0; i < countInRow; i++) {
+                addLetterButton(row, letters[index], buttonSize);
+                index++;
+            }
+            mainTable.add(row);
+            mainTable.row();
+            rowCount++;
+        }
+    }
+
+    private void addLetterButton(Table row, char letter, float size) {
+        TextButton button = new TextButton(String.valueOf(letter), skin);
+        button.getLabel().setFontScale(1.5f);
+
+        // Store which letter this button represents
+        final char letterValue = letter;
+
+        button.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                currentWord.append(letterValue);
+                updateWordDisplay();
+            }
+        });
+
+        letterButtons.add(button);
+        row.add(button).size(size, size).pad(5);
+    }
+
+    private void updateWordDisplay() {
+        selectedWordLabel.setText(currentWord.toString());
+    }
+
+    private void resetWord() {
+        currentWord.setLength(0);
+        updateWordDisplay();
+    }
+
+    private void updateTimer(float deltaTime) {
+        if (timerActive) {
+            timeLeft -= deltaTime;
+            if (timeLeft <= 0) {
+                timeLeft = 0;
+                timerActive = false;
+                if (session.getCurrentRound() < session.getTotalRounds()) {
+                    // Advance to the next round and update the display.
+                    session.nextRound();
+                    session.getGameController().generateLetters();
+                    // Reset timer and re-enable it
+                    timeLeft = 45; // Timer
+                    timerActive = true;
+                    updateRoundDisplay();  // Update the round display label.
+                    System.out.println("Round " + session.getCurrentRound() + " begins.");
+                } else {
+                    game.setScreen(new ResultView(game, session));
                 }
-            });
-
-            letterTable.add(button).pad(10).width(80).height(80);
-            count++;
-            if (count % columns == 0) letterTable.row();
+            }
+            timerLabel.setText((int)timeLeft + " SECONDS LEFT...");
         }
     }
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0, 0, 0.1f, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        updateTimer(delta);
+
+        // Update letter buttons if the available letters change
+        char[] letters = session.getCurrentLetters().toCharArray();
+        for (int i = 0; i < letterButtons.size && i < letters.length; i++) {
+            letterButtons.get(i).setText(String.valueOf(letters[i]));
+        }
 
         stage.act(delta);
         stage.draw();
+    }
+
+    public void updateScore() {
+        pointsLabel.setText("YOU HAVE " + player.getScore() + " POINTS");
+    }
+
+    private void updateRoundDisplay() {
+        roundLabel.setText("Round " + session.getCurrentRound() + " of " + session.getTotalRounds());
     }
 
     @Override
