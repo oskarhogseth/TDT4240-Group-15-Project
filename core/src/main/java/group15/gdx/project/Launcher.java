@@ -21,6 +21,11 @@ public class Launcher extends Game implements GestureListener {
         this.lobbyService = service;
     }
 
+
+    public LobbyController getLobbyController() {
+        return controller;
+    }
+
     @Override
     public void create() {
         session = new GameSession();
