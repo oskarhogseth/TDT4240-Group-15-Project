@@ -1,12 +1,16 @@
 package group15.gdx.project.controller;
 
-import com.badlogic.gdx.Gdx;
-import com.badlogic.gdx.files.FileHandle;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.io.BufferedReader;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.files.FileHandle;
 
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
@@ -14,125 +18,152 @@ import group15.gdx.project.model.Player;
 /**
  * Game controller logic
  */
+
 public class GameController {
-    private GameSession gameSession;
-    private Random random = new Random();
+    private final GameSession gameSession;
+    private final Random random = new Random();
 
-    FileHandle file = Gdx.files.internal("FrequentWords.txt");
-    // Read the entire file into a single string
-    String dictionaryData = file.readString();
-    // Split on new lines to get individual words
-    List<String> dictionary = Arrays.asList(dictionaryData.split("\\r?\\n"));
+    // Our in-memory dictionary: sortedKey -> all valid words
+    private final Map<String, List<String>> dictionaryMap = new HashMap<>();
+    // For quick random selection of a key
+    private List<String> dictionaryKeys = new ArrayList<>();
 
-    public GameController(GameSession gameSession) {
-        this.gameSession = gameSession;
+    public GameController(GameSession session) {
+        this.gameSession = session;
+        loadDictionary("ExpandedGroupedDictionary_3_7_10k_v2.txt");
     }
 
-    public GameSession getGameSession() {
-        return gameSession;
+    private void loadDictionary(String fileName) {
+        // Use LibGDX FileHandle to ensure the file is accessible on Android.
+        FileHandle file = Gdx.files.internal(fileName);
+        String content = file.readString();
+
+        // Splitting file content into lines.
+        String[] lines = content.split("\\r?\\n");
+        for (String line : lines) {
+            line = line.trim();
+            if (line.isEmpty()) continue;
+
+            // Expect line to be in the format "sortedKey -> word1, word2, word3, ...".
+            String[] parts = line.split("->");
+            if (parts.length != 2) continue;
+
+            String sortedKey = parts[0].trim();
+            String wordListStr = parts[1].trim();
+            String[] rawWords = wordListStr.split(",");
+            List<String> words = new ArrayList<>();
+            for (String w : rawWords) {
+                String trimmed = w.trim();
+                if (!trimmed.isEmpty()) {
+                    // Convert to lowercase - needed for consistency.
+                    words.add(trimmed.toLowerCase());
+                }
+            }
+            dictionaryMap.put(sortedKey, words);
+        }
+        dictionaryKeys = new ArrayList<>(dictionaryMap.keySet());
+
+        // Debug log: check dictionary size
+        System.out.println("Loaded dictionary keys count: " + dictionaryKeys.size());
     }
 
-    /**
-     * Generate random letters (e.g., 7 letters)
-     */
     public void generateLetters() {
-        String alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-        String candidate;
-        int wordCount;
+        int idx = random.nextInt(dictionaryKeys.size());
+        String sortedKey = dictionaryKeys.get(idx);
 
-        do {
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < 7; i++) {
-                int index = random.nextInt(alphabet.length());
-                sb.append(alphabet.charAt(index));
-            }
-            candidate = sb.toString();
-            wordCount = countFormableWords(candidate, dictionary);
-
-        } while (wordCount > 2 && wordCount < 5);
-
-        gameSession.setCurrentLetters(candidate);
-    }
-
-    public String getCurrentLetters() {
-        return gameSession.getCurrentLetters();
-    }
-
-
-    /**
-     * Count how many words in the dictionary can be formed from the given letter set.
-     *
-     * @param letters Candidate letter set.
-     * @param dictionary List of valid words.
-     * @return The count of formable words.
-     */
-    private int countFormableWords(String letters, List<String> dictionary) {
-        int count = 0;
-        for (String word : dictionary) {
-            if (canFormWord(letters, word)) {
-                count++;
-            }
+        char[] letters = sortedKey.toCharArray();
+        for (int i = 0; i < letters.length; i++) {
+            int swapIdx = random.nextInt(letters.length);
+            char temp = letters[i];
+            letters[i] = letters[swapIdx];
+            letters[swapIdx] = temp;
         }
-        return count;
+        String scrambled = new String(letters);
+
+        gameSession.setCurrentLetters(scrambled);
+        gameSession.setActiveSortedKey(sortedKey);
+        gameSession.getGuessedWords().clear();
+
+        // For debugging: display possible correct words in the console on application lauch (not android):
+        displayPossibleWords();
     }
 
-    public List<String> getFormableWords(String letters) {
-        List<String> validWords = new ArrayList<>();
-        for (String word : dictionary) {
-            if (canFormWord(letters, word)) {
-                validWords.add(word);
-            }
-        }
-        return validWords;
-    }
-
-    // Validate and process a word submission
     public boolean submitWord(String playerName, String word) {
-        // 1. Check if the letters can form the word
-        if (!canFormWord(gameSession.getCurrentLetters(), word)) {
+        String lowerWord = word.toLowerCase();
+
+        // Ensure the guess can be formed from the available letters.
+        if (!canFormWord(gameSession.getCurrentLetters(), lowerWord)) {
             return false;
         }
 
-        // 2. Check if it's a valid English word (local dictionary lookup)
-        if (!dictionary.contains(word.toLowerCase())) {
-            return false;
-        }
+        // Retrieve the active key and the list of valid words for that key.
+        String activeKey = gameSession.getActiveSortedKey();
+        List<String> validWords = dictionaryMap.get(activeKey);
 
-        // 3. If valid, award points
-        Player player = findPlayer(playerName);
-        if (player != null) {
-            player.addScore(word.length());
-            return true;
+        // Check if the word is among the valid answers.
+        if (validWords != null && validWords.contains(lowerWord)) {
+            // Check if the word hasn't been guessed already.
+            if (!gameSession.getGuessedWords().contains(lowerWord)) {
+                gameSession.getGuessedWords().add(lowerWord);
+                Player p = findPlayer(playerName);
+                if (p != null) {
+                    p.addScore(lowerWord.length());
+                }
+
+                // Debug: print all guessed words vs. valid words
+                System.out.println("Guessed words: " + gameSession.getGuessedWords());
+                System.out.println("All possible words: " + validWords);
+
+                // If the user has found all possible words, notify them.
+                if (gameSession.getGuessedWords().size() == validWords.size()) {
+                    System.out.println("Congratulations! You've found all possible words!");
+                }
+                return true;
+            }
         }
         return false;
     }
 
-    /**
-     * Check if a word can be formed from the given set of letters.
-     *
-     * @param letters The available letters.
-     * @param word The word to form.
-     * @return True if the word can be formed; false otherwise.
-     */
-    private boolean canFormWord(String letters, String word) {
-        String tempLetters = letters.toLowerCase();
-        for (char c : word.toLowerCase().toCharArray()) {
-            int index = tempLetters.indexOf(c);
-            if (index == -1) {
-                return false;
-            }
-            // Remove used character from tempLetters
-            tempLetters = tempLetters.substring(0, index) + tempLetters.substring(index + 1);
-        }
-        return true;
-    }
-
-    private Player findPlayer(String name) {
+    private Player findPlayer(String playerName) {
         for (Player p : gameSession.getLobby().getPlayers()) {
-            if (p.getName().equals(name)) {
+            if (p.getName().equalsIgnoreCase(playerName)) {
                 return p;
             }
         }
         return null;
+    }
+
+    /**
+     * Prints the list of all valid words for the current active puzzle key to the console.
+     */
+    public void displayPossibleWords() {
+        String activeKey = gameSession.getActiveSortedKey();
+        List<String> possibleWords = dictionaryMap.get(activeKey);
+        if (possibleWords != null && !possibleWords.isEmpty()) {
+            System.out.println("Possible correct words for key '" + activeKey + "':");
+            for (String w : possibleWords) {
+                System.out.println(w);
+            }
+        } else {
+            System.out.println("No possible words found for key: " + activeKey);
+        }
+    }
+
+    /**
+     * Checks if the word can be formed using the given available letters.
+     * Each letter in the guess must be found in the availableLetters string.
+     * When a letter is used, it is removed from a temporary copy so it isn’t reused.
+     */
+    private boolean canFormWord(String availableLetters, String word) {
+        String temp = availableLetters.toLowerCase();
+        for (char c : word.toLowerCase().toCharArray()) {
+            int index = temp.indexOf(c);
+            if (index == -1) {
+                return false;
+            }
+            // Remove the used letter from temp
+            temp = temp.substring(0, index) + temp.substring(index + 1);
+        }
+        return true;
     }
 }

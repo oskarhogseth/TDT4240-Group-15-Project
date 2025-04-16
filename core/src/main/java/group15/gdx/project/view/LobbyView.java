@@ -2,13 +2,14 @@ package group15.gdx.project.view;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.*;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.*;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+
 import group15.gdx.project.Launcher;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
@@ -26,7 +27,7 @@ public class LobbyView extends ScreenAdapter {
 
     public LobbyView(Launcher game, GameSession session) {
         this.game = game;
-        this.session = session;
+        this.gameSession = session;
 
         stage = new Stage(new FitViewport(480, 800));
         batch = new SpriteBatch();
@@ -49,6 +50,7 @@ public class LobbyView extends ScreenAdapter {
     }
 
     private void setupUI() {
+        float screenWidth = stage.getViewport().getWorldWidth();
         float screenHeight = stage.getViewport().getWorldHeight();
 
         Table root = new Table();

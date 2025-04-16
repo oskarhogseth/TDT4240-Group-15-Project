@@ -2,14 +2,17 @@ package group15.gdx.project.view;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.graphics.*;
-import com.badlogic.gdx.graphics.g2d.*;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.*;
-import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+
 import group15.gdx.project.Launcher;
 import group15.gdx.project.model.GameSession;
 
@@ -19,7 +22,7 @@ import java.util.List;
 public class GameView extends ScreenAdapter {
     private final Launcher game;
     private final GameSession session;
-    private final String activePlayerName;
+    private final Player player;
 
     private Stage stage;
     private SpriteBatch batch;
@@ -41,7 +44,7 @@ public class GameView extends ScreenAdapter {
     public GameView(Launcher game, GameSession session, String activePlayerName) {
         this.game = game;
         this.session = session;
-        this.activePlayerName = activePlayerName;
+        this.player = player;
 
         stage = new Stage(new FitViewport(480, 800));
         Gdx.input.setInputProcessor(stage);

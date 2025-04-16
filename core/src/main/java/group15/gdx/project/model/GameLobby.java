@@ -12,7 +12,6 @@ public class GameLobby {
     private List<Player> players;
 
     public GameLobby() {
-        // Properly initialize the players list
         players = new ArrayList<>();
     }
 
