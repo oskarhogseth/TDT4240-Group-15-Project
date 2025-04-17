@@ -88,6 +88,27 @@ public class GameController {
         displayPossibleWords();
     }
 
+    private boolean containsDuplicateLetters(String str){
+        // skips if empty
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+
+        boolean[] seen = new boolean[26]; // one bool for each letter in alphabet
+
+        for (char letter : str.toCharArray()) {
+            int index = letter - 'a'; // letter - 97:  to find position in alphabet
+            if (index >= 0 && index < 26) { // Make sure it's a lowercase letter
+                if (seen[index]) {
+                    return true; // Duplicate found
+                }
+                seen[index] = true;
+            }
+        }
+
+        return false;
+    }
+
     public boolean submitWord(String playerName, String word) {
         String lowerWord = word.toLowerCase();
 
