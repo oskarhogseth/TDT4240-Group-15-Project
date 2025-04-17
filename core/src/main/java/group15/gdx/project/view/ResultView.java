@@ -11,22 +11,26 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
 
 public class ResultView extends ScreenAdapter {
 
     private static final String RESULTS = "Results";
-    private static final String BACK_TO_LOBBY = "Back to lobby:";
+    private static final String BACK_TO_LOBBY = "Back to lobby";
+
     private final Launcher game;
     private final GameSession session;
+    private final LobbyController controller;
 
     private Stage stage;
     private Skin skin;
 
-    public ResultView(Launcher game, GameSession session) {
+    public ResultView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
         this.session = session;
+        this.controller = controller;
 
         stage = new Stage(new FitViewport(480, 800));
         Gdx.input.setInputProcessor(stage);
@@ -45,13 +49,11 @@ public class ResultView extends ScreenAdapter {
         table.top().padTop(screenHeight * 0.05f);
         stage.addActor(table);
 
-        // Title
         Label resultsLabel = new Label(RESULTS, skin);
         resultsLabel.setFontScale(baseFont / 18f);
         table.add(resultsLabel).colspan(2).padBottom(screenHeight * 0.03f).center();
         table.row();
 
-        // Player scores
         for (Player p : session.getLobby().getPlayers()) {
             Label scoreLabel = new Label(p.getName() + ": " + p.getScore(), skin);
             scoreLabel.setFontScale(baseFont / 22f);
@@ -62,12 +64,11 @@ public class ResultView extends ScreenAdapter {
         table.add().expandY();
         table.row();
 
-        // Back button
         TextButton backButton = new TextButton(BACK_TO_LOBBY, skin);
         backButton.getLabel().setFontScale(baseFont / 22f);
         backButton.addListener(event -> {
             if (!backButton.isPressed()) return false;
-            game.setScreen(new LobbyView(game, session));
+            game.setScreen(new LobbyView(game, session, controller)); // Reuse same controller
             return true;
         });
 
@@ -78,7 +79,6 @@ public class ResultView extends ScreenAdapter {
             .height(screenHeight * 0.08f)
             .center();
     }
-
 
     @Override
     public void render(float delta) {

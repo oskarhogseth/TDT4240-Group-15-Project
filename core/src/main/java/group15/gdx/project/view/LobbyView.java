@@ -11,29 +11,38 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.LobbyController;
+import group15.gdx.project.controller.LobbyServiceInterface;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
 
+import java.util.Map;
+
 public class LobbyView extends ScreenAdapter {
+
+    private final Launcher game;
+    private final GameSession gameSession;
+    private final LobbyController controller;
+
+    private final Stage stage;
+    private final Skin skin;
 
     private static final String WELCOME_MESSAGE = "Welcome to the Lobby!";
     private static final String PLAYERS_IN_LOBBY = "Players in lobby:";
-    private static final String START_GAME = "Start Game";
-    private final Launcher game;
-    private final GameSession gameSession;
+    private static final String START_GAME = "Play Single player";
 
-    private Stage stage;
-    private Skin skin;
 
-    public LobbyView(Launcher game, GameSession session) {
+    public LobbyView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
         this.gameSession = session;
+        this.controller = controller;
 
-        stage = new Stage(new FitViewport(480, 800)); // Scales correctly across devices
+        stage = new Stage(new FitViewport(480, 800));
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("vhs.json"));
 
         setupUI();
+        startListeningForLobbyUpdates();
     }
 
     private void setupUI() {
@@ -45,10 +54,10 @@ public class LobbyView extends ScreenAdapter {
         table.top().padTop(screenHeight * 0.05f);
         stage.addActor(table);
 
-        float baseFont = screenHeight / 40f; // Responsive font size
+        float baseFont = screenHeight / 40f;
 
         Label titleLabel = new Label(WELCOME_MESSAGE, skin);
-        titleLabel.setFontScale(baseFont / 20f); // Make title readable but not too big
+        titleLabel.setFontScale(baseFont / 20f);
         table.add(titleLabel).colspan(2).center().padBottom(screenHeight * 0.03f);
         table.row();
 
@@ -58,7 +67,7 @@ public class LobbyView extends ScreenAdapter {
         table.row();
 
         for (Player p : gameSession.getLobby().getPlayers()) {
-            Label playerLabel = new Label(p.getName(), skin);
+            Label playerLabel = new Label(p.getNickname(), skin);
             playerLabel.setFontScale(baseFont / 24f);
             table.add(playerLabel).colspan(2).center().pad(5);
             table.row();
@@ -67,24 +76,52 @@ public class LobbyView extends ScreenAdapter {
         table.add().expandY();
         table.row();
 
-        TextButton startButton = new TextButton(START_GAME, skin);
-        startButton.getLabel().setFontScale(baseFont / 22f);
-        startButton.setColor(0.8f, 0.2f, 0.2f, 1);
-        startButton.addListener(event -> {
-            if (!startButton.isPressed()) return false;
-            gameSession.getGameController().generateLetters();
-            game.setScreen(new GameView(game, gameSession, gameSession.getLobby().getPlayers().get(0)));
-            return true;
-        });
+        // Show "Start Game" button only if this player is the host
+        if (isHost()) {
+            TextButton startButton = new TextButton(START_GAME, skin);
+            startButton.getLabel().setFontScale(baseFont / 22f);
+            startButton.setColor(0.8f, 0.2f, 0.2f, 1);
+            startButton.addListener(event -> {
+                if (!startButton.isPressed()) return false;
+                System.out.println("Single player start");
+                gameSession.getGameController().generateLetters();
+                game.setScreen(new GameView(game, gameSession, gameSession.getLobby().getPlayers().get(0)));
+                return true;
+            });
 
-        table.add(startButton)
-            .width(screenWidth * 0.5f)
-            .height(screenHeight * 0.08f)
-            .padBottom(screenHeight * 0.05f)
-            .colspan(2)
-            .center();
+            table.add(startButton)
+                .width(screenWidth * 0.5f)
+                .height(screenHeight * 0.08f)
+                .padBottom(screenHeight * 0.05f)
+                .colspan(2)
+                .center();
+        }
     }
 
+    private boolean isHost() {
+        return gameSession.getLocalPlayer().getUid()
+            .equals(gameSession.getLobby().getPlayers().get(0).getUid());
+    }
+
+    private void startListeningForLobbyUpdates() {
+        controller.listenToLobby(gameSession.getLobby().getPin(), new LobbyServiceInterface.PlayerUpdateCallback() {
+            @Override
+            public void onPlayersUpdated(Map<String, String> players) {
+                gameSession.getLobby().updatePlayersFromMap(players);
+                refreshPlayerList();
+            }
+
+            @Override
+            public void onGameStarted() {
+                game.setScreen(new GameView(game, gameSession, gameSession.getLocalPlayer()));
+            }
+        });
+    }
+
+    private void refreshPlayerList() {
+        stage.clear();
+        setupUI();
+    }
 
     @Override
     public void render(float delta) {
