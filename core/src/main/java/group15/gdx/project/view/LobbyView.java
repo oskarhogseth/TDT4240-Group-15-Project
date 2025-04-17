@@ -29,7 +29,8 @@ public class LobbyView extends ScreenAdapter {
 
     private static final String WELCOME_MESSAGE = "Welcome to the Lobby!";
     private static final String PLAYERS_IN_LOBBY = "Players in lobby:";
-    private static final String START_GAME = "Start Game";
+    private static final String START_GAME = "Play Singleplayer";
+
 
     public LobbyView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
@@ -82,7 +83,9 @@ public class LobbyView extends ScreenAdapter {
             startButton.setColor(0.8f, 0.2f, 0.2f, 1);
             startButton.addListener(event -> {
                 if (!startButton.isPressed()) return false;
-                controller.startGame(gameSession.getLobby().getPin());
+                System.out.println("Singleplayer currently");
+                gameSession.getGameController().generateLetters();
+                game.setScreen(new GameView(game, gameSession, gameSession.getLobby().getPlayers().get(0)));
                 return true;
             });
 

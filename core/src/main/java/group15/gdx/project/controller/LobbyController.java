@@ -22,5 +22,6 @@ public class LobbyController {
 
     public void startGame(String pin) {
         service.startGame(pin);
+        System.out.println("service startgame");
     }
 }
