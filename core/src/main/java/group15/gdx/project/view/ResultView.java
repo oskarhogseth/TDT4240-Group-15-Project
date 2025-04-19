@@ -90,7 +90,7 @@ public class ResultView extends ScreenAdapter {
             return true;
         });
 
-            // play again button
+        // play again button
         ImageButton playAgain = new ImageButton(new TextureRegionDrawable(new TextureRegion(playAgainTexture)));
         playAgain.addListener(new ClickListener() {
             @Override

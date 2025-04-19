@@ -63,8 +63,8 @@ public class LobbyView extends ScreenAdapter {
 
 
         if (session.getLobby().getPlayers().isEmpty()) {
-            session.getLobby().addPlayer(new Player("Player1"));
-            session.getLobby().addPlayer(new Player("Player2"));
+            session.getLobby().addPlayer(new Player("Player1", "Charles"));
+            session.getLobby().addPlayer(new Player("Player2", "Nick"));
         }
 
         setupUI();
@@ -97,7 +97,7 @@ public class LobbyView extends ScreenAdapter {
             playerLabel.setFontScale(baseFont / 24f);
             root.add(playerLabel).colspan(2).center().pad(5);
             root.row();
-}
+        }
             if (isHost()) {
         ImageButton startButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(startGameTexture)));
         startButton.addListener(new ClickListener() {
@@ -140,7 +140,7 @@ public class LobbyView extends ScreenAdapter {
 
             @Override
             public void onGameStarted() {
-                game.setScreen(new GameView(game, gameSession, gameSession.getLocalPlayer()));
+                game.setScreen(new GameView(game, session, session.getLocalPlayer()));
             }
         });
     }
