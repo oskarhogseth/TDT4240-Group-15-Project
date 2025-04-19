@@ -68,9 +68,11 @@ public class GameController {
     }
 
     public void generateLetters() {
-        int idx = random.nextInt(dictionaryKeys.size());
-        String sortedKey = dictionaryKeys.get(idx);
-
+        String sortedKey;
+        do {
+            int idx = random.nextInt(dictionaryKeys.size());
+            sortedKey = dictionaryKeys.get(idx);
+        } while (containsDuplicateLetters(sortedKey));
         char[] letters = sortedKey.toCharArray();
         for (int i = 0; i < letters.length; i++) {
             int swapIdx = random.nextInt(letters.length);
@@ -86,6 +88,28 @@ public class GameController {
 
         // For debugging: display possible correct words in the console on application lauch (not android):
         displayPossibleWords();
+    }
+
+    private boolean containsDuplicateLetters(String str){
+        // skips if empty
+        if (str == null || str.isEmpty()) {
+            return false;
+        }
+
+        boolean[] seen = new boolean[26]; // one bool for each letter in alphabet
+
+        for (char letter : str.toCharArray()) {
+            int index = letter - 'a'; // letter - 97:  to find position in alphabet
+            if (index >= 0 && index < 26) { // Make sure it's a lowercase letter
+                if (seen[index]) {
+                    System.out.println("Duplicate letters! retrying");
+                    return true; // Duplicate found
+                }
+                seen[index] = true;
+            }
+        }
+
+        return false;
     }
 
     public boolean submitWord(String playerName, String word) {

@@ -18,14 +18,20 @@ import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 
 public class ResultView extends ScreenAdapter {
+
+    private static final String RESULTS = "Results";
+    private static final String BACK_TO_LOBBY = "Back to lobby";
+
     private final Launcher game;
     private final GameSession session;
+    private final LobbyController controller;
 
     private Stage stage;
     private SpriteBatch batch;
@@ -34,9 +40,10 @@ public class ResultView extends ScreenAdapter {
     private Skin skin;
     private BitmapFont cinzelFont;
 
-    public ResultView(Launcher game, GameSession session) {
+    public ResultView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
         this.session = session;
+        this.controller = controller;
 
         stage = new Stage(new FitViewport(480, 800));
         batch = new SpriteBatch();
@@ -52,6 +59,10 @@ public class ResultView extends ScreenAdapter {
     }
 
     private void setupUI() {
+        float screenWidth = stage.getViewport().getWorldWidth();
+        float screenHeight = stage.getViewport().getWorldHeight();
+        float baseFont = screenHeight / 40f;
+
         Table root = new Table();
         root.setFillParent(true);
         root.top().padTop(40);
@@ -70,15 +81,31 @@ public class ResultView extends ScreenAdapter {
             root.row();
         }
 
+// back button
+        TextButton backButton = new TextButton(BACK_TO_LOBBY, skin);
+        backButton.getLabel().setFontScale(baseFont / 22f);
+        backButton.addListener(event -> {
+            if (!backButton.isPressed()) return false;
+            game.setScreen(new LobbyView(game, session, controller)); // Reuse same controller
+            return true;
+        });
+
+            // play again button
         ImageButton playAgain = new ImageButton(new TextureRegionDrawable(new TextureRegion(playAgainTexture)));
         playAgain.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 session.getGameController().generateLetters();
-                game.setScreen(new LobbyView(game, session));
+                game.setScreen(new LobbyView(game, session, controller));
             }
         });
 
+        root.add(backButton)
+                .colspan(2)
+                .padTop(screenHeight * 0.05f)
+                .width(screenWidth * 0.5f)
+                .height(screenHeight * 0.08f)
+                .center();
         root.add(playAgain).size(220, 80).padTop(40).colspan(2).center();
     }
 

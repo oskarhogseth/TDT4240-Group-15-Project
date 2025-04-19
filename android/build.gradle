@@ -1,3 +1,4 @@
+
 buildscript {
   repositories {
     mavenCentral()
@@ -7,6 +8,7 @@ buildscript {
 
 plugins {
   id 'com.android.application'
+  // Add the Google services Gradle plugin
   id 'com.google.gms.google-services'
 }
 
@@ -71,6 +73,7 @@ android {
 }
 
 repositories {
+  // needed for AAPT2, may be needed for other tools
   google()
 }
 
@@ -80,35 +83,33 @@ dependencies {
   def gdxVersion = '1.12.1' // Or your current version
 
   coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
-  implementation project(':core')
   implementation "com.badlogicgames.gdx:gdx-backend-android:$gdxVersion"
+  implementation project(':core')
 
-  // GDX platform natives
-  natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
+  natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-arm64-v8a"
+  natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a"
+  natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86"
+  natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86_64"
   natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-arm64-v8a"
+  natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-armeabi-v7a"
   natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86"
   natives "com.badlogicgames.gdx:gdx-platform:$gdxVersion:natives-x86_64"
 
-  // Box2D (if used)
-  natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-armeabi-v7a"
-  natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-arm64-v8a"
-  natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86"
-  natives "com.badlogicgames.gdx:gdx-box2d-platform:$gdxVersion:natives-x86_64"
-
-  // ✅ FreeType font support (with native .so support)
-  implementation "com.badlogicgames.gdx:gdx-freetype:$gdxVersion"
-  natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-armeabi-v7a"
-  natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-arm64-v8a"
-  natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86"
-  natives "com.badlogicgames.gdx:gdx-freetype-platform:$gdxVersion:natives-x86_64"
-
-  // Firebase BoM + products
+  // Import the Firebase BoM
   implementation platform('com.google.firebase:firebase-bom:33.10.0')
+
+  // TODO: Add the dependencies for Firebase products you want to use
+  // When using the BoM, don't specify versions in Firebase dependencies
   implementation 'com.google.firebase:firebase-analytics'
+
+  // Add the dependencies for any other desired Firebase products
+  // https://firebase.google.com/docs/android/setup#available-libraries
   implementation 'com.google.firebase:firebase-database'
 }
 
-// Copy native .so files into libs/ folders
+// Called every time gradle gets executed, takes the native dependencies of
+// the natives configuration, and extracts them to the proper libs/ folders
+// so they get packed with the APK.
 tasks.register('copyAndroidNatives') {
   doFirst {
     file("libs/armeabi-v7a/").mkdirs()
@@ -118,11 +119,11 @@ tasks.register('copyAndroidNatives') {
 
     configurations.natives.copy().files.each { jar ->
       def outputDir = null
-      if (jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("libs/armeabi-v7a")
-      if (jar.name.endsWith("natives-arm64-v8a.jar")) outputDir = file("libs/arm64-v8a")
-      if (jar.name.endsWith("natives-x86_64.jar")) outputDir = file("libs/x86_64")
-      if (jar.name.endsWith("natives-x86.jar")) outputDir = file("libs/x86")
-      if (outputDir != null) {
+      if(jar.name.endsWith("natives-armeabi-v7a.jar")) outputDir = file("libs/armeabi-v7a")
+      if(jar.name.endsWith("natives-arm64-v8a.jar")) outputDir = file("libs/arm64-v8a")
+      if(jar.name.endsWith("natives-x86_64.jar")) outputDir = file("libs/x86_64")
+      if(jar.name.endsWith("natives-x86.jar")) outputDir = file("libs/x86")
+      if(outputDir != null) {
         copy {
           from zipTree(jar)
           into outputDir
@@ -133,18 +134,24 @@ tasks.register('copyAndroidNatives') {
   }
 }
 
-tasks.matching { it.name.contains("merge") && it.name.contains("JniLibFolders") }.configureEach {
-  it.dependsOn 'copyAndroidNatives'
+tasks.matching { it.name.contains("merge") && it.name.contains("JniLibFolders") }.configureEach { packageTask ->
+  packageTask.dependsOn 'copyAndroidNatives'
 }
 
-// Run shortcut for launching the app
 tasks.register('run', Exec) {
   def path
   def localProperties = project.file("../local.properties")
   if (localProperties.exists()) {
     Properties properties = new Properties()
-    localProperties.withInputStream { instr -> properties.load(instr) }
-    path = properties.getProperty('sdk.dir')
+    localProperties.withInputStream { instr ->
+      properties.load(instr)
+    }
+    def sdkDir = properties.getProperty('sdk.dir')
+    if (sdkDir) {
+      path = sdkDir
+    } else {
+      path = "$System.env.ANDROID_SDK_ROOT"
+    }
   } else {
     path = "$System.env.ANDROID_SDK_ROOT"
   }

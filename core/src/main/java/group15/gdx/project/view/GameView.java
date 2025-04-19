@@ -96,7 +96,7 @@ public class GameView extends ScreenAdapter {
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new ResultView(game, session));
+                game.setScreen(new ResultView(game, session, game.getLobbyController()));
             }
         });
 
@@ -188,7 +188,7 @@ public class GameView extends ScreenAdapter {
                     updateLetters();
                     System.out.println("Round " + session.getCurrentRound() + " begins.");
                 } else {
-                    game.setScreen(new ResultView(game, session));
+                    game.setScreen(new ResultView(game, session, game.getLobbyController()));
                 }
             }
         });

@@ -20,23 +20,35 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.LobbyController;
+import group15.gdx.project.controller.LobbyServiceInterface;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
 
+import java.util.Map;
+
 public class LobbyView extends ScreenAdapter {
+
     private final Launcher game;
     private final GameSession session;
+    private final LobbyController controller;
 
-    private Stage stage;
+    private final Stage stage;
+    private final Skin skin;
+
+    private static final String WELCOME_MESSAGE = "Welcome to the Lobby!";
+    private static final String PLAYERS_IN_LOBBY = "Players in lobby:";
+    private static final String START_GAME = "Play Single player";
+
     private SpriteBatch batch;
     private Texture backgroundTexture;
     private Texture startGameTexture;
-    private Skin skin;
     private BitmapFont cinzelFont;
 
-    public LobbyView(Launcher game, GameSession session) {
+    public LobbyView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
         this.session = session;
+        this.controller = controller;
 
         stage = new Stage(new FitViewport(480, 800));
         batch = new SpriteBatch();
@@ -56,6 +68,7 @@ public class LobbyView extends ScreenAdapter {
         }
 
         setupUI();
+        startListeningForLobbyUpdates();
     }
 
     private void setupUI() {
@@ -66,20 +79,26 @@ public class LobbyView extends ScreenAdapter {
         root.setFillParent(true);
         root.top().padTop(screenHeight * 0.03f);
         stage.addActor(root);
+        float baseFont = screenHeight / 40f;
 
-        Label title = new Label("Lobby", skin);
+        Label title = new Label(WELCOME_MESSAGE, skin);
         title.setColor(0, 0, 0, 1);
         title.setFontScale(2f);
         root.add(title).colspan(2).padBottom(20).center();
         root.row();
 
-        for (Player p : session.getLobby().getPlayers()) {
-            Label playerLabel = new Label(p.getName(), skin);
-            playerLabel.setColor(0, 0, 0, 1);
-            root.add(playerLabel).colspan(2).pad(5).center();
-            root.row();
-        }
+        Label instructionsLabel = new Label(PLAYERS_IN_LOBBY, skin);
+        instructionsLabel.setFontScale(baseFont / 22f);
+        root.add(instructionsLabel).colspan(2).center().padBottom(screenHeight * 0.02f);
+        root.row();
 
+        for (Player p : session.getLobby().getPlayers()) {
+            Label playerLabel = new Label(p.getNickname(), skin);
+            playerLabel.setFontScale(baseFont / 24f);
+            root.add(playerLabel).colspan(2).center().pad(5);
+            root.row();
+}
+            if (isHost()) {
         ImageButton startButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(startGameTexture)));
         startButton.addListener(new ClickListener() {
             @Override
@@ -93,8 +112,8 @@ public class LobbyView extends ScreenAdapter {
                 game.setScreen(new GameView(game, session, session.getLobby().getPlayers().get(0)));
             }
         });
-
-        root.add(startButton).size(220, 80).padTop(40).colspan(2).center();
+                root.add(startButton).size(220, 80).padTop(40).colspan(2).center();
+            }
     }
 
     private BitmapFont loadCinzelFont(int size) {
@@ -105,6 +124,29 @@ public class LobbyView extends ScreenAdapter {
         BitmapFont font = gen.generateFont(param);
         gen.dispose();
         return font;
+    }
+    private boolean isHost() {
+        return session.getLocalPlayer().getUid()
+            .equals(session.getLobby().getPlayers().get(0).getUid());
+    }
+
+    private void startListeningForLobbyUpdates() {
+        controller.listenToLobby(session.getLobby().getPin(), new LobbyServiceInterface.PlayerUpdateCallback() {
+            @Override
+            public void onPlayersUpdated(Map<String, String> players) {
+                session.getLobby().updatePlayersFromMap(players);
+                refreshPlayerList();
+            }
+
+            @Override
+            public void onGameStarted() {
+                game.setScreen(new GameView(game, gameSession, gameSession.getLocalPlayer()));
+            }
+        });
+    }
+    private void refreshPlayerList() {
+        stage.clear();
+        setupUI();
     }
 
     @Override
