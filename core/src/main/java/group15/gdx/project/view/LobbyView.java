@@ -4,6 +4,8 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -16,6 +18,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
@@ -36,6 +40,8 @@ public class LobbyView extends ScreenAdapter {
     private final Stage stage;
     private final Skin skin;
 
+    private Texture infoTexture;
+
     private static final String WELCOME_MESSAGE = "Welcome to the Lobby!";
     private static final String PLAYERS_IN_LOBBY = "Players in lobby:";
     private static final String START_GAME = "Play Single player";
@@ -49,6 +55,8 @@ public class LobbyView extends ScreenAdapter {
         this.game = game;
         this.session = session;
         this.controller = controller;
+
+        infoTexture = new Texture(Gdx.files.internal("info_button.png"));
 
         stage = new Stage(new FitViewport(480, 800));
         batch = new SpriteBatch();
@@ -74,22 +82,23 @@ public class LobbyView extends ScreenAdapter {
     private void setupUI() {
         float screenWidth = stage.getViewport().getWorldWidth();
         float screenHeight = stage.getViewport().getWorldHeight();
+        float baseFont = screenHeight / 40f;
 
+        // ── ROOT LOBBY TABLE ──
         Table root = new Table();
         root.setFillParent(true);
         root.top().padTop(screenHeight * 0.03f);
         stage.addActor(root);
-        float baseFont = screenHeight / 40f;
-
+        // Title
         Label title = new Label(WELCOME_MESSAGE, skin);
         title.setColor(0, 0, 0, 1);
         title.setFontScale(2f);
         root.add(title).colspan(2).padBottom(20).center();
         root.row();
 
-        Label instructionsLabel = new Label(PLAYERS_IN_LOBBY, skin);
-        instructionsLabel.setFontScale(baseFont / 22f);
-        root.add(instructionsLabel).colspan(2).center().padBottom(screenHeight * 0.02f);
+        Label playersLabel = new Label(PLAYERS_IN_LOBBY, skin);
+        playersLabel.setFontScale(baseFont / 22f);
+        root.add(playersLabel).colspan(2).center().padBottom(screenHeight * 0.02f);
         root.row();
 
         for (Player p : session.getLobby().getPlayers()) {
@@ -98,7 +107,9 @@ public class LobbyView extends ScreenAdapter {
             root.add(playerLabel).colspan(2).center().pad(5);
             root.row();
         }
-            if (isHost()) {
+
+        // Start button (host only)
+        if (isHost()) {
         ImageButton startButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(startGameTexture)));
         startButton.addListener(new ClickListener() {
             @Override
@@ -114,6 +125,19 @@ public class LobbyView extends ScreenAdapter {
         });
                 root.add(startButton).size(220, 80).padTop(40).colspan(2).center();
             }
+        // ── INFO ICON OVERLAY ──
+        Drawable infoDrawable = new TextureRegionDrawable(new TextureRegion(infoTexture));
+        ImageButton infoButton = new ImageButton(infoDrawable);
+        infoButton.addListener(evt -> {
+            if (!infoButton.isPressed()) return false;
+            game.setScreen(new HowToPlayView(game, gameSession, controller));
+            return true;
+        });
+        Table overlay = new Table();
+        overlay.setFillParent(true);
+        overlay.top().right().pad(10);
+        overlay.add(infoButton).size(screenHeight * 0.04f);
+        stage.addActor(overlay);
     }
 
     private BitmapFont loadCinzelFont(int size) {
@@ -144,6 +168,7 @@ public class LobbyView extends ScreenAdapter {
             }
         });
     }
+
     private void refreshPlayerList() {
         stage.clear();
         setupUI();
@@ -167,5 +192,7 @@ public class LobbyView extends ScreenAdapter {
         backgroundTexture.dispose();
         startGameTexture.dispose();
         cinzelFont.dispose();
+        skin.dispose();
+        infoTexture.dispose();
     }
 }
