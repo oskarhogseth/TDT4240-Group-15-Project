@@ -3,6 +3,7 @@ package group15.gdx.project.lwjgl3;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.LobbyServiceInterface;
 
 /** Launches the desktop (LWJGL3) application. */
 public class Lwjgl3Launcher {
@@ -12,7 +13,12 @@ public class Lwjgl3Launcher {
     }
 
     private static Lwjgl3Application createApplication() {
-        return new Lwjgl3Application(new Launcher(), getDefaultConfiguration());
+        Launcher launcher = new Launcher();
+
+        LobbyServiceInterface dummyService = new DummyLobbyService();
+        launcher.setLobbyService(dummyService);
+
+        return new Lwjgl3Application(launcher, getDefaultConfiguration());
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
