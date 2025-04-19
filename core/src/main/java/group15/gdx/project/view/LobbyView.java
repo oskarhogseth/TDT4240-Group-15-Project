@@ -130,7 +130,7 @@ public class LobbyView extends ScreenAdapter {
         ImageButton infoButton = new ImageButton(infoDrawable);
         infoButton.addListener(evt -> {
             if (!infoButton.isPressed()) return false;
-            game.setScreen(new HowToPlayView(game, gameSession, controller));
+            game.setScreen(new HowToPlayView(game, session, controller));
             return true;
         });
         Table overlay = new Table();
