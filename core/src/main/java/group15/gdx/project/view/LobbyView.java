@@ -3,11 +3,16 @@ package group15.gdx.project.view;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import group15.gdx.project.Launcher;
@@ -27,6 +32,8 @@ public class LobbyView extends ScreenAdapter {
     private final Stage stage;
     private final Skin skin;
 
+    private Texture infoTexture;
+
     private static final String WELCOME_MESSAGE = "Welcome to the Lobby!";
     private static final String PLAYERS_IN_LOBBY = "Players in lobby:";
     private static final String START_GAME = "Play Single player";
@@ -37,6 +44,8 @@ public class LobbyView extends ScreenAdapter {
         this.gameSession = session;
         this.controller = controller;
 
+        infoTexture = new Texture(Gdx.files.internal("info_button.png"));
+
         stage = new Stage(new FitViewport(480, 800));
         Gdx.input.setInputProcessor(stage);
         skin = new Skin(Gdx.files.internal("vhs.json"));
@@ -46,56 +55,84 @@ public class LobbyView extends ScreenAdapter {
     }
 
     private void setupUI() {
-        float screenWidth = stage.getViewport().getWorldWidth();
-        float screenHeight = stage.getViewport().getWorldHeight();
+        float sw = stage.getViewport().getWorldWidth();
+        float sh = stage.getViewport().getWorldHeight();
+        float baseFont = sh / 40f;
 
-        Table table = new Table();
-        table.setFillParent(true);
-        table.top().padTop(screenHeight * 0.05f);
-        stage.addActor(table);
+        // ── ROOT LOBBY TABLE ──
+        Table root = new Table();
+        root.setFillParent(true);
+        root.top().padTop(sh * 0.05f);
+        stage.addActor(root);
 
-        float baseFont = screenHeight / 40f;
-
+        // Title
         Label titleLabel = new Label(WELCOME_MESSAGE, skin);
         titleLabel.setFontScale(baseFont / 20f);
-        table.add(titleLabel).colspan(2).center().padBottom(screenHeight * 0.03f);
-        table.row();
+        root.add(titleLabel).colspan(2).center();
+        root.row().padTop(sh * 0.02f);
 
-        Label instructionsLabel = new Label(PLAYERS_IN_LOBBY, skin);
-        instructionsLabel.setFontScale(baseFont / 22f);
-        table.add(instructionsLabel).colspan(2).center().padBottom(screenHeight * 0.02f);
-        table.row();
+        // Players label
+        Label playersLabel = new Label(PLAYERS_IN_LOBBY, skin);
+        playersLabel.setFontScale(baseFont / 22f);
+        root.add(playersLabel)
+            .colspan(2)
+            .center()
+            .padBottom(sh * 0.02f);
+        root.row();
 
+        // Player list
         for (Player p : gameSession.getLobby().getPlayers()) {
             Label playerLabel = new Label(p.getNickname(), skin);
             playerLabel.setFontScale(baseFont / 24f);
-            table.add(playerLabel).colspan(2).center().pad(5);
-            table.row();
+            root.add(playerLabel)
+                .colspan(2)
+                .center()
+                .pad(5);
+            root.row();
         }
 
-        table.add().expandY();
-        table.row();
+        // Spacer
+        root.add().expandY().colspan(2);
+        root.row();
 
-        // Show "Start Game" button only if this player is the host
+        // Start button (host only)
         if (isHost()) {
             TextButton startButton = new TextButton(START_GAME, skin);
             startButton.getLabel().setFontScale(baseFont / 22f);
             startButton.setColor(0.8f, 0.2f, 0.2f, 1);
-            startButton.addListener(event -> {
+            startButton.addListener(evt -> {
                 if (!startButton.isPressed()) return false;
-                System.out.println("Single player start");
                 gameSession.getGameController().generateLetters();
-                game.setScreen(new GameView(game, gameSession, gameSession.getLobby().getPlayers().get(0)));
+                game.setScreen(new GameView(
+                    game,
+                    gameSession,
+                    gameSession.getLobby().getPlayers().get(0)
+                ));
                 return true;
             });
 
-            table.add(startButton)
-                .width(screenWidth * 0.5f)
-                .height(screenHeight * 0.08f)
-                .padBottom(screenHeight * 0.05f)
+            root.add(startButton)
+                .width(sw * 0.5f)
+                .height(sh * 0.08f)
+                .padBottom(sh * 0.05f)
                 .colspan(2)
                 .center();
         }
+
+        // ── INFO ICON OVERLAY ──
+        Drawable infoDrawable = new TextureRegionDrawable(new TextureRegion(infoTexture));
+        ImageButton infoButton = new ImageButton(infoDrawable);
+        infoButton.addListener(evt -> {
+            if (!infoButton.isPressed()) return false;
+            game.setScreen(new HowToPlayView(game, gameSession, controller));
+            return true;
+        });
+
+        Table overlay = new Table();
+        overlay.setFillParent(true);
+        overlay.top().right().pad(10);
+        overlay.add(infoButton).size(sh * 0.04f);
+        stage.addActor(overlay);
     }
 
     private boolean isHost() {
@@ -136,5 +173,6 @@ public class LobbyView extends ScreenAdapter {
     public void dispose() {
         stage.dispose();
         skin.dispose();
+        infoTexture.dispose();
     }
 }
