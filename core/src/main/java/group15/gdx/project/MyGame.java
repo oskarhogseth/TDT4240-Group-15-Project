@@ -3,10 +3,10 @@ package group15.gdx.project;
 import com.badlogic.gdx.ApplicationListener;
 
 public class MyGame implements ApplicationListener {
-    private final Leaderboard leaderboard;
+    private final API API;
 
-    public MyGame(Leaderboard leaderboardImpl) {
-        this.leaderboard = leaderboardImpl;
+    public MyGame(API APIImpl) {
+        this.API = APIImpl;
     }
 
     @Override

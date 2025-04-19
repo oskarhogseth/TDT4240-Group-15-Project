@@ -19,30 +19,6 @@ public class AndroidLauncher extends AndroidApplication {
         super.onCreate(savedInstanceState);
         AndroidApplicationConfiguration configuration = new AndroidApplicationConfiguration();
         configuration.useImmersiveMode = true; // Recommended, but not required.
-        initialize(new Launcher(), configuration);
-
-        testFirebaseConnection();
-    }
-
-    private void testFirebaseConnection() {
-        FirebaseDatabase database = FirebaseDatabase.getInstance();
-        DatabaseReference myRef = database.getReference("testNode");
-
-        // Write a test value
-        myRef.setValue("Hello, Firebase!");
-
-        // Read back the value
-        myRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String value = dataSnapshot.getValue(String.class);
-                System.out.println("Firebase Value: " + value);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError error) {
-                System.err.println("Firebase Error: " + error.getMessage());
-            }
-        });
+        initialize(new Launcher(new AndroidAPI()), configuration);
     }
 }

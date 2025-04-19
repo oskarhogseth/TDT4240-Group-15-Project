@@ -14,6 +14,7 @@ import com.badlogic.gdx.files.FileHandle;
 
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
+import group15.gdx.project.view.Leaderboard;
 
 /**
  * Game controller logic

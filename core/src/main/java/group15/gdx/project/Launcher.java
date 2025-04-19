@@ -1,7 +1,7 @@
 package group15.gdx.project;
 
 import group15.gdx.project.model.GameSession;
-import group15.gdx.project.view.LobbyView;
+import group15.gdx.project.view.Leaderboard;
 import group15.gdx.project.view.LogInView;
 
 import com.badlogic.gdx.Game;
@@ -13,6 +13,13 @@ import com.badlogic.gdx.math.Vector2;
 public class Launcher extends Game implements GestureListener {
 
     private GameSession session;
+    private Leaderboard leaderboard;
+
+    API api;
+
+    public Launcher(API api) {
+        this.api = api;
+    }
 
     @Override
     public void create() {
@@ -59,5 +66,9 @@ public class Launcher extends Game implements GestureListener {
     @Override
     public void pinchStop() {
         // No action needed, but must be defined
+    }
+
+    public API getAPI() {
+        return this.api;
     }
 }
