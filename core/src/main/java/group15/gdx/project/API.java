@@ -6,5 +6,9 @@ import group15.gdx.project.model.Score;
 
 public interface API {
     void submitScore(Score score);
-    void getHighscores(ArrayList<Score> dataHolder);
+    void getHighscores(ArrayList<Score> dataHolder, HighscoresCallback callback);
+
+    interface HighscoresCallback {
+        void onHighscoresLoaded();
+    }
 }

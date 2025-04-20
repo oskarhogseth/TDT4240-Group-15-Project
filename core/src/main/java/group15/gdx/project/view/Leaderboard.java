@@ -47,15 +47,18 @@ public class Leaderboard extends ScreenAdapter {
         }
 
         fetchLeaderboard();
-        populateLeaderboardTable();
+
+        setupUI();
 
         Gdx.input.setInputProcessor(stage);
-        setupUI();
     }
 
     private void fetchLeaderboard() {
         //this.leaderboard.clear();
-        api.getHighscores(this.leaderboard);
+        api.getHighscores(this.leaderboard, () -> {
+            System.out.println("Highscores loaded");
+            populateLeaderboardTable();
+        });
     }
 
     public void submitHighscore(Player player, int score) {
@@ -103,8 +106,12 @@ public class Leaderboard extends ScreenAdapter {
         leaderboardTable.row();
 
         // Add scores
-        for (int i = 0; i < leaderboard.size(); i++) {
+        int displayCount = Math.min(leaderboard.size(), 10);
+
+        System.out.println("Leaderboard size: " + leaderboard.size());
+        for (int i = 0; i < displayCount; i++) {
             Score score = leaderboard.get(i);
+            System.out.println("Score: " + score.getPlayer() + " - " + score.getScore());
             leaderboardTable.add(new Label(String.valueOf(i + 1), skin)).align(Align.center);
             leaderboardTable.add(new Label(score.getPlayer(), skin)).align(Align.left);
             leaderboardTable.add(new Label(String.valueOf(score.getScore()), skin)).align(Align.center);
