@@ -8,6 +8,8 @@ import group15.gdx.project.controller.GameController;
 public class GameSession {
     private String currentLetters;
     private String activeSortedKey; // The underlying puzzle key
+
+    private Player localPlayer;
     private GameLobby lobby;
     private GameController gameController;
     private List<String> guessedWords;
@@ -34,6 +36,14 @@ public class GameSession {
         this.currentLetters = letters;
     }
 
+    public Player getLocalPlayer() {
+        return localPlayer;
+    }
+
+    public void setLocalPlayer(Player player) {
+        this.localPlayer = player;
+    }
+
     // Active Sorted Key
     public String getActiveSortedKey() {
         return activeSortedKey;
@@ -55,6 +65,10 @@ public class GameSession {
     // Lobby & Controller
     public GameLobby getLobby() {
         return lobby;
+    }
+
+    public void setLobby(GameLobby lobby) {
+        this.lobby = lobby;
     }
 
     public GameController getGameController() {

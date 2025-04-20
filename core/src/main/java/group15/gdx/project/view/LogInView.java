@@ -14,6 +14,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
 
@@ -23,16 +24,19 @@ public class LogInView extends ScreenAdapter {
     private static final String ENTER_NAME = "Please enter your name:";
     private static final String LOGIN_BUTTON = "Join Lobby";
     private static final String YOUR_NAME = "Your name";
+
     private final Launcher game;
     private final GameSession gameSession;
+    private final LobbyController controller; // Core controller for lobby logic
 
     private Stage stage;
     private Skin skin;
     private TextField nameField;
 
-    public LogInView(Launcher game, GameSession session) {
+    public LogInView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
         this.gameSession = session;
+        this.controller = controller;
 
         stage = new Stage(new FitViewport(480, 800));
         Gdx.input.setInputProcessor(stage);
@@ -97,14 +101,15 @@ public class LogInView extends ScreenAdapter {
     }
 
     private void login(String playerName) {
-        Player player = new Player(playerName);
+        Player player = new Player("id-" + playerName, playerName); // Generate player UID
+        gameSession.setLocalPlayer(player); // Set local player
         gameSession.getLobby().addPlayer(player);
 
-        //ADD ANOTHER PLAYER TO THE LOBBY UNTIL WE HAVE IMPLEMENTED MULTIPLAYER (REMOVE THIS BEFORE SUBMITTING)
-        Player player2 = new Player("Bob");
+        // TEMPORARY — Add dummy player for testing multiplayer UI
+        Player player2 = new Player("id-bob", "Bob");
         gameSession.getLobby().addPlayer(player2);
 
-        game.setScreen(new LobbyView(game, gameSession));
+        game.setScreen(new LobbyView(game, gameSession, controller)); // Pass controller
     }
 
     @Override

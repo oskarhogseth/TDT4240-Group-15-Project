@@ -9,13 +9,10 @@ import group15.gdx.project.model.Score;
 
 /** Desktop implementation, we simply log invocations **/
 public class Lwjgl3API implements API {
-    public void submitScore(String user, int score) {
-        Gdx.app.log("Lwjgl3Leaderboard", "would have submitted score for user " + user + ": " + score);
-    }
 
     @Override
     public void submitScore(Score score) {
-
+        Gdx.app.log("Lwjgl3Leaderboard", "would have submitted score for user " + score.getPlayer() + ": " + score.getScore());
     }
 
     @Override

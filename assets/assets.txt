@@ -1,8 +1,8 @@
 ExpandedGroupedDictionary_3_7_10k_v2.txt
 background.png
 backgroundblocks.png
+backgroundlogo.png
 backgroundx.png
-backroundlogo.png
 block.png
 bronzebutton.png
 cinzel.ttf
@@ -13,10 +13,12 @@ createnewgame.png
 enterword.png
 font-export.fnt
 font-title-export.fnt
+info_button.png
 joingame.png
 leave.png
 leavegame.png
 nextround.png
+playagain.png
 redbutton.png
 scoreboard.png
 settings.png
@@ -25,5 +27,6 @@ swords.png
 vhs.atlas
 vhs.json
 vhs.png
+wordduel.png
 x.png
 yellowbutton.png
