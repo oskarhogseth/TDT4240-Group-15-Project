@@ -139,6 +139,10 @@ public class GameView extends ScreenAdapter {
         rootTable.row();
 
         // Letter pyramid
+        pyramidContainer = new Table();
+        rootTable.add(pyramidContainer).colspan(3).padBottom(10).center();
+        rootTable.row();
+
         buildPyramid(session.getCurrentLetters().toCharArray());
 
         // Enter word button
@@ -147,6 +151,8 @@ public class GameView extends ScreenAdapter {
         enterButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                if (((ImageButton) event.getListenerActor()).isDisabled()) return;
+
                 String word = currentWord.toString().trim();
                 if (word.isEmpty()) {
                     feedbackLabel.setText("No word entered.");
@@ -185,11 +191,13 @@ public class GameView extends ScreenAdapter {
                     timeLeft = 10; // Timer
                     timerEnded = false;
                     updateRoundDisplay();  // Update the round display label.
-                    updateLetters();
+                    buildPyramid(session.getCurrentLetters().toCharArray());
                     System.out.println("Round " + session.getCurrentRound() + " begins.");
                 } else {
                     game.setScreen(new ResultView(game, session, game.getLobbyController()));
                 }
+                resetWord();
+                enterButton.setDisabled(false);
             }
         });
         rootTable.add(nextRoundButton).width(180).height(70).colspan(3).center();
@@ -201,6 +209,7 @@ public class GameView extends ScreenAdapter {
         for (int i = 0; i < letterButtons.size() && i < letters.length; i++) {
             letterButtons.get(i).setText(String.valueOf(letters[i]));
         }
+        buildPyramid(letters);
     }
 
     // build pyramid updated to include all letters
@@ -208,9 +217,9 @@ public class GameView extends ScreenAdapter {
         float tileSize = 90f;
         int index = 0;
 
+        pyramidContainer.clear(); // Clear old tiles
         letterButtons.clear();
 
-        // Determine layout based on number of letters
         int total = letters.length;
         int[] rowLayout;
 
@@ -220,16 +229,15 @@ public class GameView extends ScreenAdapter {
             case 5: rowLayout = new int[]{2, 3}; break;
             case 6: rowLayout = new int[]{1, 2, 3}; break;
             case 7: rowLayout = new int[]{1, 3, 3}; break;
-            default: rowLayout = new int[]{1, 2, 3}; break; // fallback
+            default: rowLayout = new int[]{1, 2, 3}; break;
         }
 
         for (int rowCount : rowLayout) {
             if (index >= total) break;
 
             Table row = new Table();
+            int emptyCells = (3 - rowCount);
 
-            // Center row with empty padding cells
-            int emptyCells = (3 - rowCount); // assuming max 3 tiles per row for center alignment
             for (int i = 0; i < emptyCells; i++) {
                 row.add().width(tileSize);
             }
@@ -238,11 +246,9 @@ public class GameView extends ScreenAdapter {
                 row.add(createTile(letters[index++], tileSize)).size(tileSize).pad(5);
             }
 
-            rootTable.add(row).colspan(3).padBottom(10).center();
-            rootTable.row();
+            pyramidContainer.add(row).row();
         }
     }
-
 
     private TextButton createTile(char letter, float size) {
         TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
@@ -256,6 +262,7 @@ public class GameView extends ScreenAdapter {
         tile.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                if (((TextButton) event.getListenerActor()).isDisabled()) return;
                 currentWord.append(letter);
                 wordLabel.setText(currentWord.toString());
             }
@@ -304,6 +311,7 @@ public class GameView extends ScreenAdapter {
             if (timeLeft <= 0) {
                 timerEnded = true;
                 timerLabel.setText("Time's up!");
+                System.out.println("Disabling " + letterButtons.size() + " letter buttons.");
 
                 for (TextButton button : letterButtons) {
                     button.setDisabled(true);
