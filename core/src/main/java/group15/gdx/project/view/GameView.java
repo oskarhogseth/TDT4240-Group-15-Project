@@ -217,7 +217,7 @@ public class GameView extends ScreenAdapter {
         float tileSize = 90f;
         int index = 0;
 
-        pyramidContainer.clear(); // Clear old tiles
+        pyramidContainer.clear();
         letterButtons.clear();
 
         int total = letters.length;
@@ -236,17 +236,14 @@ public class GameView extends ScreenAdapter {
             if (index >= total) break;
 
             Table row = new Table();
-            int emptyCells = (3 - rowCount);
-
-            for (int i = 0; i < emptyCells; i++) {
-                row.add().width(tileSize);
-            }
 
             for (int i = 0; i < rowCount && index < total; i++) {
                 row.add(createTile(letters[index++], tileSize)).size(tileSize).pad(5);
             }
 
-            pyramidContainer.add(row).row();
+            // Add the whole row centered inside pyramidContainer
+            pyramidContainer.add(row).colspan(3).padBottom(10).center();
+            pyramidContainer.row();
         }
     }
 
