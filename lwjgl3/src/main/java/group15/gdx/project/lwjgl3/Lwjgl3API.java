@@ -23,5 +23,6 @@ public class Lwjgl3API implements API {
         dataHolder.add(new Score("Player3", 300));
         dataHolder.add(new Score("Player4", 400));
         dataHolder.add(new Score("Player5", 500));
+        callback.onHighscoresLoaded();
     }
 }
