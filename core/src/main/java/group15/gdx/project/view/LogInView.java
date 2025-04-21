@@ -37,7 +37,7 @@ public class LogInView extends ScreenAdapter {
         this.session = session;
         this.controller = controller;
 
-        stage = new Stage(new FitViewport(480, 800));
+        stage = new Stage(new FitViewport(1080, 2400));
         Gdx.input.setInputProcessor(stage);
         batch = new SpriteBatch();
 

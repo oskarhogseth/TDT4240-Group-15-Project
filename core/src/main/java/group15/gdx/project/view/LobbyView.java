@@ -53,7 +53,7 @@ public class LobbyView extends ScreenAdapter {
 
         infoTexture = new Texture(Gdx.files.internal("info_button.png"));
 
-        stage = new Stage(new FitViewport(480, 800));
+        stage = new Stage(new FitViewport(1080, 2400));
         batch = new SpriteBatch();
         Gdx.input.setInputProcessor(stage);
 
