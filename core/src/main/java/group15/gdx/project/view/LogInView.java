@@ -2,120 +2,121 @@ package group15.gdx.project.view;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.scenes.scene2d.Actor;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-import com.badlogic.gdx.scenes.scene2d.utils.ChangeListener;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.scenes.scene2d.*;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-
 import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
-import group15.gdx.project.model.Player;
 
 public class LogInView extends ScreenAdapter {
 
-    private static final String TITLE = "Welcome to Word Duel";
-    private static final String ENTER_NAME = "Please enter your name:";
-    private static final String LOGIN_BUTTON = "Join Lobby";
-    private static final String YOUR_NAME = "Your name";
-
     private final Launcher game;
-    private final GameSession gameSession;
-    private final LobbyController controller; // Core controller for lobby logic
+    private final GameSession session;
+    private final LobbyController controller;
 
     private Stage stage;
+    private SpriteBatch batch;
     private Skin skin;
-    private TextField nameField;
+    private BitmapFont cinzelFont;
+
+    private Texture backgroundTexture;
+    private Texture logoTexture;
+    private Texture createGameTexture;
+    private Texture joinGameTexture;
 
     public LogInView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
-        this.gameSession = session;
+        this.session = session;
         this.controller = controller;
 
         stage = new Stage(new FitViewport(480, 800));
         Gdx.input.setInputProcessor(stage);
+        batch = new SpriteBatch();
+
+        // Load assets
+        backgroundTexture = new Texture("background.png");
+        logoTexture = new Texture("wordduel.png");
+        createGameTexture = new Texture("createnewgame.png");
+        joinGameTexture = new Texture("joingame.png");
+
+        // Load skin and Cinzel font
         skin = new Skin(Gdx.files.internal("vhs.json"));
+        cinzelFont = loadCinzelFont(30);
+        skin.get(Label.LabelStyle.class).font = cinzelFont;
 
         setupUI();
     }
 
     private void setupUI() {
-        float screenWidth = stage.getViewport().getWorldWidth();
         float screenHeight = stage.getViewport().getWorldHeight();
+        float screenWidth = stage.getViewport().getWorldWidth();
 
         Table table = new Table();
         table.setFillParent(true);
         table.center();
         stage.addActor(table);
 
-        float baseFont = screenHeight / 40f;
 
-        // Title
-        Label titleLabel = new Label(TITLE, skin);
-        titleLabel.setFontScale(baseFont / 20f);
-        table.add(titleLabel).colspan(2).center().padBottom(screenHeight * 0.1f);
+        Image logoImage = new Image(logoTexture);
+        logoImage.setSize(screenWidth * 0.8f, screenHeight * 0.25f);
+        table.add(logoImage).colspan(2).padBottom(screenHeight * 0.07f).center();
         table.row();
 
-        // Name field instructions
-        Label nameLabel = new Label(ENTER_NAME, skin);
-        nameLabel.setFontScale(baseFont / 22f);
-        table.add(nameLabel).colspan(2).center().padBottom(screenHeight * 0.03f);
-        table.row();
 
-        // Name input field
-        nameField = new TextField("", skin);
-        nameField.setMessageText(YOUR_NAME);
-        table.add(nameField)
-            .width(screenWidth * 0.7f)
-            .height(screenHeight * 0.07f)
-            .colspan(2)
-            .center()
-            .padBottom(screenHeight * 0.05f);
-        table.row();
-
-        // Join lobby button
-        TextButton loginButton = new TextButton(LOGIN_BUTTON, skin);
-        loginButton.getLabel().setFontScale(baseFont / 22f);
-        loginButton.setColor(0.2f, 0.6f, 0.8f, 1);
-        loginButton.addListener(new ChangeListener() {
+        ImageButton createButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(createGameTexture)));
+        createButton.addListener(new ClickListener() {
             @Override
-            public void changed(ChangeEvent event, Actor actor) {
-                String playerName = nameField.getText().trim();
-                if (!playerName.isEmpty()) {
-                    login(playerName);
-                }
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new CreateGameView(game, session, controller));
             }
         });
 
-        table.add(loginButton)
-            .width(screenWidth * 0.5f)
-            .height(screenHeight * 0.08f)
-            .colspan(2)
-            .center();
+
+        ImageButton joinButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(joinGameTexture)));
+        joinButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                game.setScreen(new JoinGameView(game, session, controller));
+            }
+        });
+
+
+        Table buttonRow = new Table();
+        buttonRow.add(createButton).width(180).height(70).padRight(20);
+        buttonRow.add(joinButton).width(180).height(70).padLeft(20);
+
+        table.add(buttonRow).colspan(2).padTop(screenHeight * 0.03f).expandY().bottom();
     }
 
-    private void login(String playerName) {
-        Player player = new Player("id-" + playerName, playerName); // Generate player UID
-        gameSession.setLocalPlayer(player); // Set local player
-        gameSession.getLobby().addPlayer(player);
-
-        // TEMPORARY — Add dummy player for testing multiplayer UI
-        Player player2 = new Player("id-bob", "Bob");
-        gameSession.getLobby().addPlayer(player2);
-
-        game.setScreen(new LobbyView(game, gameSession, controller)); // Pass controller
+    private BitmapFont loadCinzelFont(int size) {
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("cinzel.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = size;
+        parameter.color = Color.BLACK;
+        BitmapFont font = generator.generateFont(parameter);
+        generator.dispose();
+        return font;
     }
 
     @Override
     public void render(float delta) {
-        Gdx.gl.glClearColor(0.1f, 0.1f, 0.15f, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        batch.setProjectionMatrix(stage.getCamera().combined);
+        batch.begin();
+        batch.draw(backgroundTexture, 0, 0,
+                stage.getViewport().getWorldWidth(),
+                stage.getViewport().getWorldHeight());
+        batch.end();
 
         stage.act(delta);
         stage.draw();
@@ -124,6 +125,12 @@ public class LogInView extends ScreenAdapter {
     @Override
     public void dispose() {
         stage.dispose();
+        batch.dispose();
+        backgroundTexture.dispose();
+        logoTexture.dispose();
+        createGameTexture.dispose();
+        joinGameTexture.dispose();
+        cinzelFont.dispose();
         skin.dispose();
     }
 }
