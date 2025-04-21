@@ -1,6 +1,7 @@
 package group15.gdx.project.lwjgl3;
 
 import group15.gdx.project.controller.LobbyServiceInterface;
+import group15.gdx.project.model.LetterSet;
 
 public class DummyLobbyService implements LobbyServiceInterface {
 
@@ -13,6 +14,21 @@ public class DummyLobbyService implements LobbyServiceInterface {
     public void joinLobby(String pin, String nickname, Runnable onSuccess, Runnable onFail) {
         System.out.println("Dummy: joinLobby called");
         onSuccess.run(); // Simulate success
+    }
+
+    @Override
+    public void startGame(String pin, LetterSet letters) {
+
+    }
+
+    @Override
+    public void createLobby(String nickname, int rounds, String difficulty, CreateCallback callback) {
+
+    }
+
+    @Override
+    public void joinLobby(String pin, String nickname, JoinCallback callback) {
+
     }
 
     @Override

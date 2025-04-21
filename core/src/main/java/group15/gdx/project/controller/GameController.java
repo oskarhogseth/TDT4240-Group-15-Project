@@ -15,6 +15,7 @@ import com.badlogic.gdx.files.FileHandle;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
 import group15.gdx.project.view.Leaderboard;
+import group15.gdx.project.model.LetterSet;
 
 /**
  * Game controller logic
@@ -67,27 +68,33 @@ public class GameController {
         System.out.println("Loaded dictionary keys count: " + dictionaryKeys.size());
     }
 
-    public void generateLetters() {
+    public LetterSet generateLetters() {
         String sortedKey;
         do {
             int idx = random.nextInt(dictionaryKeys.size());
             sortedKey = dictionaryKeys.get(idx);
         } while (containsDuplicateLetters(sortedKey));
+
+        // scramble
         char[] letters = sortedKey.toCharArray();
         for (int i = 0; i < letters.length; i++) {
-            int swapIdx = random.nextInt(letters.length);
-            char temp = letters[i];
-            letters[i] = letters[swapIdx];
-            letters[swapIdx] = temp;
+            int swap = random.nextInt(letters.length);
+            char t = letters[i]; letters[i] = letters[swap]; letters[swap] = t;
         }
         String scrambled = new String(letters);
 
+        // persist in session for the host
         gameSession.setCurrentLetters(scrambled);
         gameSession.setActiveSortedKey(sortedKey);
         gameSession.getGuessedWords().clear();
 
-        // For debugging: display possible correct words in the console on application lauch (not android):
-        displayPossibleWords();
+        return new LetterSet(scrambled, sortedKey);
+    }
+
+    public void loadLetters(LetterSet set) {
+        gameSession.setCurrentLetters(set.getScrambled());
+        gameSession.setActiveSortedKey(set.getSortedKey());
+        gameSession.getGuessedWords().clear();
     }
 
     private boolean containsDuplicateLetters(String str){

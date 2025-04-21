@@ -20,9 +20,11 @@ import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.GameController;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.controller.LobbyServiceInterface;
 import group15.gdx.project.model.GameSession;
+import group15.gdx.project.model.LetterSet;
 import group15.gdx.project.model.Player;
 
 import java.util.Map;
@@ -35,6 +37,10 @@ public class LobbyView extends ScreenAdapter {
 
     private final Stage stage;
     private final Skin skin;
+
+    private Table playerListTable;
+
+    private Label pinLabel;
 
     private Texture infoTexture;
 
@@ -76,15 +82,16 @@ public class LobbyView extends ScreenAdapter {
     }
 
     private void setupUI() {
-        float screenWidth = stage.getViewport().getWorldWidth();
+        float screenWidth  = stage.getViewport().getWorldWidth();
         float screenHeight = stage.getViewport().getWorldHeight();
-        float baseFont = screenHeight / 40f;
+        float baseFont     = screenHeight / 40f;
 
         // ── ROOT LOBBY TABLE ──
-        Table root = new Table();
+        Table root = new Table(skin);
         root.setFillParent(true);
         root.top().padTop(screenHeight * 0.03f);
         stage.addActor(root);
+
         // Title
         Label title = new Label(WELCOME_MESSAGE, skin);
         title.setColor(0, 0, 0, 1);
@@ -92,35 +99,46 @@ public class LobbyView extends ScreenAdapter {
         root.add(title).colspan(2).padBottom(20).center();
         root.row();
 
-        Label playersLabel = new Label(PLAYERS_IN_LOBBY, skin);
-        playersLabel.setFontScale(baseFont / 22f);
-        root.add(playersLabel).colspan(2).center().padBottom(screenHeight * 0.02f);
+        // Game PIN
+        String pin = session.getLobby().getPin();
+        Label pinLabel = new Label("Game PIN: " + pin, skin);
+        pinLabel.setFontScale(baseFont / 20f);
+        root.add(pinLabel).colspan(2).padBottom(screenHeight * 0.02f).center();
         root.row();
 
-        for (Player p : session.getLobby().getPlayers()) {
-            Label playerLabel = new Label(p.getNickname(), skin);
-            playerLabel.setFontScale(baseFont / 24f);
-            root.add(playerLabel).colspan(2).center().pad(5);
+        // “Players in Lobby:” header
+        Label playersLabel = new Label(PLAYERS_IN_LOBBY, skin);
+        playersLabel.setFontScale(baseFont / 22f);
+        root.add(playersLabel).colspan(2).padBottom(screenHeight * 0.02f).center();
+        root.row();
+
+        // Dynamic player list table (starts empty, filled by refreshPlayerList)
+        playerListTable = new Table(skin);
+        playerListTable.top();
+        root.add(playerListTable).colspan(2).fillX();
+        root.row();
+
+        // Host‑only “Start Game” button
+        if (isHost()) {
+            ImageButton startButton = new ImageButton(
+                new TextureRegionDrawable(new TextureRegion(startGameTexture)));
+            startButton.addListener(new ClickListener() {
+                @Override public void clicked(InputEvent ev,float x,float y) {
+                    if (session.getLobby().getPlayers().isEmpty()) return;
+
+                    LetterSet set = session.getGameController().generateLetters();
+                    String pin   = session.getLobby().getPin();
+                    controller.startGame(pin, set);
+                }
+            });
+            root.add(startButton)
+                .size(220, 80)
+                .padTop(40)
+                .colspan(2)
+                .center();
             root.row();
         }
 
-        // Start button (host only)
-        if (isHost()) {
-        ImageButton startButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(startGameTexture)));
-        startButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                if (session.getLobby().getPlayers().isEmpty()) {
-                    System.out.println(" No players in the lobby.");
-                    return;
-                }
-
-                session.getGameController().generateLetters();
-                game.setScreen(new GameView(game, session, session.getLobby().getPlayers().get(0)));
-            }
-        });
-                root.add(startButton).size(220, 80).padTop(40).colspan(2).center();
-            }
         // ── INFO ICON OVERLAY ──
         Drawable infoDrawable = new TextureRegionDrawable(new TextureRegion(infoTexture));
         ImageButton infoButton = new ImageButton(infoDrawable);
@@ -129,7 +147,7 @@ public class LobbyView extends ScreenAdapter {
             game.setScreen(new HowToPlayView(game, session, controller));
             return true;
         });
-        Table overlay = new Table();
+        Table overlay = new Table(skin);
         overlay.setFillParent(true);
         overlay.top().right().pad(10);
         overlay.add(infoButton).size(screenHeight * 0.04f);
@@ -151,24 +169,41 @@ public class LobbyView extends ScreenAdapter {
     }
 
     private void startListeningForLobbyUpdates() {
-        controller.listenToLobby(session.getLobby().getPin(), new LobbyServiceInterface.PlayerUpdateCallback() {
+        String pin = session.getLobby().getPin();
+        controller.listenToLobby(pin, new LobbyServiceInterface.PlayerUpdateCallback() {
+
             @Override
-            public void onPlayersUpdated(Map<String, String> players) {
+            public void onPlayersUpdated(Map<String,String> players) {
                 session.getLobby().updatePlayersFromMap(players);
-                refreshPlayerList();
+                Gdx.app.postRunnable(() -> refreshPlayerList());
             }
 
             @Override
-            public void onGameStarted() {
-                game.setScreen(new GameView(game, session, session.getLocalPlayer()));
+            public void onGameStarted(LetterSet set) {
+                session.getGameController().loadLetters(set);   // sync letters
+                Gdx.app.postRunnable(() ->
+                    game.setScreen(new GameView(
+                        game, session, session.getLocalPlayer()))
+                );
             }
         });
     }
 
     private void refreshPlayerList() {
-        stage.clear();
-        setupUI();
+        // clear only the player rows
+        playerListTable.clearChildren();
+
+        float screenHeight = stage.getViewport().getWorldHeight();
+        float baseFont     = screenHeight / 40f;
+
+        for (Player p : session.getLobby().getPlayers()) {
+            Label name = new Label(p.getNickname(), skin);
+            name.setFontScale(baseFont / 24f);
+            playerListTable.add(name).pad(5).center();
+            playerListTable.row();
+        }
     }
+
 
     @Override
     public void render(float delta) {
