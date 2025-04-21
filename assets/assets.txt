@@ -17,9 +17,9 @@ fivebronze.png
 fiveyellow.png
 font-export.fnt
 font-title-export.fnt
+gladiator.mp3
 hardbronze.png
 hardyellow.png
-gladiator.mp3
 info_button.png
 joingame.png
 leave.png
