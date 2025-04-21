@@ -16,8 +16,7 @@ public class AndroidLauncher extends AndroidApplication {
         AndroidApplicationConfiguration configuration = new AndroidApplicationConfiguration();
         configuration.useImmersiveMode = true;
 
-
-        Launcher launcher = new Launcher();
+        Launcher launcher = new Launcher(new AndroidAPI());
         LobbyServiceInterface service = new AndroidLobbyService();
         launcher.setLobbyService(service);
 

@@ -10,16 +10,24 @@ import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.controller.LobbyServiceInterface;
 import group15.gdx.project.midi.GameSong;
 import group15.gdx.project.model.GameSession;
+import group15.gdx.project.view.Leaderboard;
 import group15.gdx.project.view.LogInView;
 
 public class Launcher extends Game implements GestureListener {
 
     private GameSession session;
+    private Leaderboard leaderboard;
     private LobbyServiceInterface lobbyService;
     private LobbyController controller;
     private GameSong gameSong;
 
     private boolean isMuted = false;
+
+    API api;
+
+    public Launcher(API api) {
+        this.api = api;
+    }
 
     public void setLobbyService(LobbyServiceInterface service) {
         this.lobbyService = service;
@@ -70,4 +78,8 @@ public class Launcher extends Game implements GestureListener {
     @Override public boolean pinch(Vector2 initialPointer1, Vector2 initialPointer2, Vector2 pointer1, Vector2 pointer2) { return false; }
     @Override public boolean longPress(float x, float y) { return false; }
     @Override public void pinchStop() {}
+
+    public API getAPI() {
+        return this.api;
+    }
 }

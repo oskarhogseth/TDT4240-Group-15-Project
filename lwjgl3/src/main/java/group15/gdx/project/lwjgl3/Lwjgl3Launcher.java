@@ -13,7 +13,7 @@ public class Lwjgl3Launcher {
     }
 
     private static Lwjgl3Application createApplication() {
-        Launcher launcher = new Launcher();
+        Launcher launcher = new Launcher(new Lwjgl3API());
 
         LobbyServiceInterface dummyService = new DummyLobbyService();
         launcher.setLobbyService(dummyService);

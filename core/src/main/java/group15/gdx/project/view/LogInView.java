@@ -86,9 +86,8 @@ public class LogInView extends ScreenAdapter {
                 .padBottom(spacing);
         buttonCol.row();
 
-        buttonCol.add(makeMenuButton(leaderboardTexture, () -> {
-            // TODO: Leaderboard
-        })).padBottom(spacing);
+        buttonCol.add(makeMenuButton(leaderboardTexture, () -> game.setScreen(new Leaderboard(game, session))))
+                .padBottom(spacing);
         buttonCol.row();
 
         buttonCol.add(makeMenuButton(howToPlayTexture, () -> {

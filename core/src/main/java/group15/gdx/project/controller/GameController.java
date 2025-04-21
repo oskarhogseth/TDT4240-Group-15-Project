@@ -14,6 +14,7 @@ import com.badlogic.gdx.files.FileHandle;
 
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
+import group15.gdx.project.view.Leaderboard;
 
 /**
  * Game controller logic
@@ -27,7 +28,6 @@ public class GameController {
     private final Map<String, List<String>> dictionaryMap = new HashMap<>();
     // For quick random selection of a key
     private List<String> dictionaryKeys = new ArrayList<>();
-
     public GameController(GameSession session) {
         this.gameSession = session;
         loadDictionary("ExpandedGroupedDictionary_3_7_10k_v2.txt");
@@ -142,6 +142,7 @@ public class GameController {
                 if (gameSession.getGuessedWords().size() == validWords.size()) {
                     System.out.println("Congratulations! You've found all possible words!");
                 }
+
                 return true;
             }
         }

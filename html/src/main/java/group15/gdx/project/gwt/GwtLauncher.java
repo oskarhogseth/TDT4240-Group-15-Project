@@ -7,6 +7,8 @@ import group15.gdx.project.Launcher;
 
 /** Launches the GWT application. */
 public class GwtLauncher extends GwtApplication {
+
+
         @Override
         public GwtApplicationConfiguration getConfig () {
             // Resizable application, uses available space in browser with no padding:
@@ -21,6 +23,6 @@ public class GwtLauncher extends GwtApplication {
 
         @Override
         public ApplicationListener createApplicationListener () {
-            return new Launcher();
+            return new Launcher(new GwtAPI());
         }
 }
