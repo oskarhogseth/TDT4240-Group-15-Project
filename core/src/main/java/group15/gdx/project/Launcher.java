@@ -1,11 +1,5 @@
 package group15.gdx.project;
 
-import group15.gdx.project.controller.LobbyController;
-import group15.gdx.project.controller.LobbyServiceInterface;
-import group15.gdx.project.model.GameSession;
-import group15.gdx.project.view.Leaderboard;
-import group15.gdx.project.view.LogInView;
-
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.input.GestureDetector;
@@ -16,6 +10,7 @@ import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.controller.LobbyServiceInterface;
 import group15.gdx.project.midi.GameSong;
 import group15.gdx.project.model.GameSession;
+import group15.gdx.project.view.Leaderboard;
 import group15.gdx.project.view.LogInView;
 
 public class Launcher extends Game implements GestureListener {
@@ -25,6 +20,8 @@ public class Launcher extends Game implements GestureListener {
     private LobbyServiceInterface lobbyService;
     private LobbyController controller;
     private GameSong gameSong;
+
+    private boolean isMuted = false;
 
     API api;
 
@@ -36,9 +33,27 @@ public class Launcher extends Game implements GestureListener {
         this.lobbyService = service;
     }
 
-
     public LobbyController getLobbyController() {
         return controller;
+    }
+
+    public boolean isMuted() {
+        return isMuted;
+    }
+
+    public void setMuted(boolean muted) {
+        isMuted = muted;
+        if (gameSong != null) {
+            if (isMuted) {
+                gameSong.stop();
+            } else {
+                gameSong.play();
+            }
+        }
+    }
+
+    public void toggleMute() {
+        setMuted(!isMuted);
     }
 
     @Override
@@ -46,14 +61,14 @@ public class Launcher extends Game implements GestureListener {
         session = new GameSession();
         controller = new LobbyController(lobbyService);
         gameSong = new GameSong();
-        gameSong.play();
+        gameSong.play(); // Start music at launch
 
         Gdx.input.setInputProcessor(new GestureDetector(this));
 
-        setScreen(new LogInView(this, session, controller)); // Pass controller to LogInView
+        setScreen(new LogInView(this, session, controller));
     }
 
-
+    // Gesture methods
     @Override public boolean touchDown(float x, float y, int pointer, int button) { return false; }
     @Override public boolean tap(float x, float y, int count, int button) { return true; }
     @Override public boolean fling(float velocityX, float velocityY, int button) { return true; }

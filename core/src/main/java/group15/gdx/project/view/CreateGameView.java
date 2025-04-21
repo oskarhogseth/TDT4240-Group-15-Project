@@ -8,7 +8,11 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LobbyController;
@@ -29,6 +33,9 @@ public class CreateGameView extends ScreenAdapter {
     private Texture backButtonTexture;
     private Texture whiteBox;
     private Texture logoTexture;
+    private Texture volumeTexture;
+    private Texture muteTexture;
+    private ImageButton volumeButton;
 
     private Texture threeBronze, fiveBronze, sevenBronze;
     private Texture threeYellow, fiveYellow, sevenYellow;
@@ -62,6 +69,8 @@ public class CreateGameView extends ScreenAdapter {
         createButtonTexture = new Texture("creategame.png");
         backButtonTexture = new Texture("back.png");
         logoTexture = new Texture("wordduel.png");
+        volumeTexture = new Texture("volume.png");
+        muteTexture = new Texture("mute.png");
 
         whiteBox = createSolidColorTexture(Color.WHITE);
 
@@ -86,22 +95,41 @@ public class CreateGameView extends ScreenAdapter {
 
         nicknameField = new TextField("", createTextFieldStyle());
         nicknameField.setMessageText("Nickname");
-        nicknameField.setSize(720, 140);
-        nicknameField.setPosition(180, 1810);
+        nicknameField.setSize(720, 120);
+        nicknameField.setPosition(180, 1720); // moved down
         stage.addActor(nicknameField);
-        nicknameBox = new Rectangle(170, 1795, 740, 160);
+        nicknameBox = new Rectangle(170, 1725, 740, 120);
 
         roundRects = new Rectangle[3];
         difficultyRects = new Rectangle[2];
         for (int i = 0; i < 3; i++) {
-            roundRects[i] = new Rectangle(130 + i * 270, 1420, 240, 130);
+            roundRects[i] = new Rectangle(130 + i * 270, 1350, 240, 130); // moved down
         }
         for (int i = 0; i < 2; i++) {
-            difficultyRects[i] = new Rectangle(210 + i * 330, 1120, 300, 130);
+            difficultyRects[i] = new Rectangle(210 + i * 330, 1050, 300, 130); // moved down
         }
 
         createButtonRect = new Rectangle(324, 450, 432, 144);
         backButtonRect = new Rectangle(324, 200, 432, 144);
+
+        setupVolumeButton();
+    }
+
+    private void setupVolumeButton() {
+        TextureRegionDrawable iconDrawable = new TextureRegionDrawable(
+                new TextureRegion(game.isMuted() ? muteTexture : volumeTexture));
+        volumeButton = new ImageButton(iconDrawable);
+        volumeButton.setSize(100, 100);
+        volumeButton.setPosition(stage.getViewport().getWorldWidth() - 110, stage.getViewport().getWorldHeight() - 110);
+        volumeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                game.toggleMute();
+                TextureRegion region = new TextureRegion(game.isMuted() ? muteTexture : volumeTexture);
+                volumeButton.getStyle().imageUp = new TextureRegionDrawable(region);
+            }
+        });
+        stage.addActor(volumeButton);
     }
 
     @Override
@@ -111,31 +139,30 @@ public class CreateGameView extends ScreenAdapter {
 
         batch.begin();
         batch.draw(backgroundTexture, 0, 0, 1080, 2400);
+        batch.draw(logoTexture, 108, 1980, 864, 240);
 
-        // Logo at top center
-        batch.draw(logoTexture, 190, 2100, 700, 180);
-
-        font.draw(batch, "ENTER NICKNAME", 180, 2010); // moved 50px down
+        font.draw(batch, "ENTER NICKNAME", 150, 1920);
         batch.draw(whiteBox, nicknameBox.x, nicknameBox.y, nicknameBox.width, nicknameBox.height);
 
-        font.draw(batch, "SELECT ROUNDS", 150, 1610); // moved 50px down
+        font.draw(batch, "SELECT ROUNDS", 150, 1540);
         drawButton(batch, roundRects[0], selectedRounds.equals("3") ? threeYellow : threeBronze);
         drawButton(batch, roundRects[1], selectedRounds.equals("5") ? fiveYellow : fiveBronze);
         drawButton(batch, roundRects[2], selectedRounds.equals("7") ? sevenYellow : sevenBronze);
 
-        font.draw(batch, "SELECT DIFFICULTY", 150, 1310); // moved 50px down
+        font.draw(batch, "SELECT DIFFICULTY", 150, 1240);
         drawButton(batch, difficultyRects[0], selectedDifficulty.equals("normal") ? normalYellow : normalBronze);
         drawButton(batch, difficultyRects[1], selectedDifficulty.equals("hard") ? hardYellow : hardBronze);
 
         batch.draw(createButtonTexture, createButtonRect.x, createButtonRect.y, createButtonRect.width, createButtonRect.height);
         batch.draw(backButtonTexture, backButtonRect.x, backButtonRect.y, backButtonRect.width, backButtonRect.height);
-
         batch.end();
-        stage.act(delta);
-        stage.draw();
 
         handleInput();
+
+        stage.act(delta);
+        stage.draw();
     }
+
 
     private void drawButton(SpriteBatch batch, Rectangle rect, Texture texture) {
         batch.draw(texture, rect.x, rect.y, rect.width, rect.height);
@@ -196,9 +223,11 @@ public class CreateGameView extends ScreenAdapter {
         batch.dispose();
         font.dispose();
         backgroundTexture.dispose();
+        logoTexture.dispose();
+        volumeTexture.dispose();
+        muteTexture.dispose();
         createButtonTexture.dispose();
         backButtonTexture.dispose();
-        logoTexture.dispose();
         whiteBox.dispose();
         threeBronze.dispose(); fiveBronze.dispose(); sevenBronze.dispose();
         threeYellow.dispose(); fiveYellow.dispose(); sevenYellow.dispose();

@@ -8,7 +8,11 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LobbyController;
@@ -29,6 +33,9 @@ public class JoinGameView extends ScreenAdapter {
     private Texture backButtonTexture;
     private Texture whiteBox;
     private Texture logoTexture;
+    private Texture volumeTexture;
+    private Texture muteTexture;
+    private ImageButton volumeButton;
 
     private TextField pinField;
     private TextField nicknameField;
@@ -47,9 +54,12 @@ public class JoinGameView extends ScreenAdapter {
         batch = new SpriteBatch();
 
         backgroundTexture = new Texture("background.png");
-        logoTexture = new Texture("wordduel.png");
         joinButtonTexture = new Texture("joingame.png");
         backButtonTexture = new Texture("back.png");
+        logoTexture = new Texture("wordduel.png");
+        volumeTexture = new Texture("volume.png");
+        muteTexture = new Texture("mute.png");
+
         whiteBox = createSolidColorTexture(Color.WHITE);
 
         FreeTypeFontGenerator gen = new FreeTypeFontGenerator(Gdx.files.internal("cinzel.ttf"));
@@ -62,19 +72,38 @@ public class JoinGameView extends ScreenAdapter {
         nicknameField = new TextField("", createTextFieldStyle());
         nicknameField.setMessageText("Nickname");
         nicknameField.setSize(720, 140);
-        nicknameField.setPosition(180, 1650);
+        nicknameField.setPosition(180, 1600); // moved down a bit
         stage.addActor(nicknameField);
-        nicknameBox = new Rectangle(170, 1635, 740, 160);
+        nicknameBox = new Rectangle(170, 1585, 740, 160);
 
         pinField = new TextField("", createTextFieldStyle());
-        pinField.setMessageText("Enter PIN");
+        pinField.setMessageText("PIN");
         pinField.setSize(720, 140);
-        pinField.setPosition(180, 1330);
+        pinField.setPosition(180, 1280); // moved down a bit
         stage.addActor(pinField);
-        pinBox = new Rectangle(170, 1315, 740, 160);
+        pinBox = new Rectangle(170, 1265, 740, 160);
 
         joinButtonRect = new Rectangle(324, 450, 432, 144);
         backButtonRect = new Rectangle(324, 200, 432, 144);
+
+        setupVolumeButton();
+    }
+
+    private void setupVolumeButton() {
+        TextureRegionDrawable iconDrawable = new TextureRegionDrawable(
+                new TextureRegion(game.isMuted() ? muteTexture : volumeTexture));
+        volumeButton = new ImageButton(iconDrawable);
+        volumeButton.setSize(100, 100);
+        volumeButton.setPosition(stage.getViewport().getWorldWidth() - 110, stage.getViewport().getWorldHeight() - 110);
+        volumeButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
+                game.toggleMute();
+                TextureRegion region = new TextureRegion(game.isMuted() ? muteTexture : volumeTexture);
+                volumeButton.getStyle().imageUp = new TextureRegionDrawable(region);
+            }
+        });
+        stage.addActor(volumeButton);
     }
 
     @Override
@@ -84,12 +113,14 @@ public class JoinGameView extends ScreenAdapter {
 
         batch.begin();
         batch.draw(backgroundTexture, 0, 0, 1080, 2400);
-        batch.draw(logoTexture, 240, 1980, 600, 240);
 
-        font.draw(batch, "ENTER NICKNAME", 180, 1845);
+        // draw logo the same size and placement as in LogInView/CreateGameView
+        batch.draw(logoTexture, 108, 1980, 864, 240); // 80% of width, centered
+
+        font.draw(batch, "ENTER NICKNAME", 180, 1800);
         batch.draw(whiteBox, nicknameBox.x, nicknameBox.y, nicknameBox.width, nicknameBox.height);
 
-        font.draw(batch, "ENTER PIN", 180, 1545);
+        font.draw(batch, "ENTER PIN", 180, 1480);
         batch.draw(whiteBox, pinBox.x, pinBox.y, pinBox.width, pinBox.height);
 
         batch.draw(joinButtonTexture, joinButtonRect.x, joinButtonRect.y, joinButtonRect.width, joinButtonRect.height);
@@ -149,7 +180,9 @@ public class JoinGameView extends ScreenAdapter {
         backgroundTexture.dispose();
         joinButtonTexture.dispose();
         backButtonTexture.dispose();
-        whiteBox.dispose();
         logoTexture.dispose();
+        volumeTexture.dispose();
+        muteTexture.dispose();
+        whiteBox.dispose();
     }
 }
