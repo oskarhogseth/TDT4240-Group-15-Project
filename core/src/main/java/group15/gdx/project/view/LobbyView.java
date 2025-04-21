@@ -104,24 +104,6 @@ public class LobbyView extends ScreenAdapter {
             root.row();
         }
 
-        // Leaderboard button
-        TextButton leaderboardButton = new TextButton("Leaderboard", skin);
-        leaderboardButton.getLabel().setFontScale(baseFont / 22f);
-        leaderboardButton.addListener(event -> {
-            if (!leaderboardButton.isPressed()) return false;
-            game.setScreen(new Leaderboard(game, session));
-            return true;
-        });
-
-        root.add(leaderboardButton)
-            .width(screenWidth * 0.5f)
-            .height(screenHeight * 0.08f)
-            .padBottom(screenHeight * 0.05f)
-            .colspan(2)
-            .center();
-
-        root.row();
-
         // Start button (host only)
         if (isHost()) {
         ImageButton startButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(startGameTexture)));

@@ -28,8 +28,6 @@ public class GameController {
     private final Map<String, List<String>> dictionaryMap = new HashMap<>();
     // For quick random selection of a key
     private List<String> dictionaryKeys = new ArrayList<>();
-
-    private Leaderboard leaderboard;
     public GameController(GameSession session) {
         this.gameSession = session;
         loadDictionary("ExpandedGroupedDictionary_3_7_10k_v2.txt");
@@ -134,7 +132,6 @@ public class GameController {
                 Player p = findPlayer(playerName);
                 if (p != null) {
                     p.addScore(lowerWord.length());
-                    leaderboard.submitHighscore(p, p.getScore());
                 }
 
                 // Debug: print all guessed words vs. valid words

@@ -89,7 +89,7 @@ public class Leaderboard extends ScreenAdapter {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
-                game.setScreen(new LobbyView(game, gameSession, game.getLobbyController()));
+                game.setScreen(new LogInView(game, gameSession, game.getLobbyController()));
             }
         });
         mainTable.add(backButton).padTop(20).width(200).height(50).center();

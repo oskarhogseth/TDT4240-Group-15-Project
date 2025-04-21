@@ -21,6 +21,8 @@ import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
+import group15.gdx.project.model.Score;
+
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 
 
@@ -76,6 +78,7 @@ public class ResultView extends ScreenAdapter {
 
         for (Player player : session.getLobby().getPlayers()) {
             Label scoreLabel = new Label(player.getName() + ": " + player.getScore(), skin);
+            game.getAPI().submitScore(new Score(player.getName(), player.getScore()));
             scoreLabel.setColor(0, 0, 0, 1);
             root.add(scoreLabel).colspan(2).pad(5);
             root.row();
