@@ -91,8 +91,9 @@ public class LogInView extends ScreenAdapter {
         buttonCol.row();
 
         buttonCol.add(makeMenuButton(howToPlayTexture, () -> {
-            // TODO: HowToPlay
+            game.setScreen(new HowToPlayView(game, session, controller));
         }));
+
 
         root.add(buttonCol).center().expand();
 
