@@ -19,6 +19,7 @@ font-export.fnt
 font-title-export.fnt
 hardbronze.png
 hardyellow.png
+gladiator.mp3
 info_button.png
 joingame.png
 leave.png
