@@ -9,12 +9,24 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+
 import com.badlogic.gdx.scenes.scene2d.ui.*;
+
+import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
+
+import java.util.Map;
+
 import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LobbyController;
+import group15.gdx.project.controller.LobbyServiceInterface;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
 
@@ -23,6 +35,9 @@ public class JoinGameView extends ScreenAdapter {
     private final Launcher game;
     private final GameSession session;
     private final LobbyController controller;
+
+    Skin uiSkin = new Skin(Gdx.files.internal("vhs.json"));
+    Dialog dialog = new Dialog("Error", uiSkin);
 
     private Stage stage;
     private SpriteBatch batch;
@@ -143,33 +158,74 @@ public class JoinGameView extends ScreenAdapter {
         stage.draw();
     }
 
-    private void handleInput() {
-        if (Gdx.input.justTouched()) {
-            Vector2 touch = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-            stage.getViewport().unproject(touch);
+private void handleInput() {
+    if (!Gdx.input.justTouched()) return;
 
-            if (joinButtonRect.contains(touch)) {
-                String nickname = nicknameField.getText().trim();
-                String pin = pinField.getText().trim();
+    Vector2 touch = new Vector2(Gdx.input.getX(), Gdx.input.getY());
+    stage.getViewport().unproject(touch);
 
-                if (nickname.isEmpty()) {
-                    errorLabel.setText("Please enter a nickname");
-                } else if (pin.isEmpty() || pin.length() != 4) {
-                    errorLabel.setText("Please enter a 4-digit PIN");
-                } else {
-                    Player player = new Player("id-" + nickname, nickname);
-                    session.setLocalPlayer(player);
-                    session.getLobby().setPin(pin);
-                    controller.joinLobby(pin, nickname,
-                            () -> game.setScreen(new LobbyView(game, session, controller)),
-                            () -> errorLabel.setText("Failed to join lobby"));
-                }
-            }
+    // JOIN GAME
+    if (joinButtonRect.contains(touch)) {
+        String pin = pinField.getText().trim();
+        String nickname = nicknameField.getText().trim();
 
-            if (backButtonRect.contains(touch)) {
-                game.setScreen(new LogInView(game, session, controller));
-            }
+        if (nickname.isEmpty()) {
+            errorLabel.setText("Please enter a nickname");
+            return;
         }
+
+        if (pin.isEmpty() || pin.length() != 4) {
+            errorLabel.setText("Please enter a 4-digit PIN");
+            return;
+        }
+
+        Player player = new Player("id-" + nickname, nickname);
+        session.setLocalPlayer(player);
+
+        controller.joinLobby(pin, nickname, new LobbyServiceInterface.JoinCallback() {
+            @Override
+            public void onSuccess() {
+                Gdx.app.postRunnable(() -> {
+                    session.getLobby().setPin(pin);
+                    session.getLobby().updatePlayersFromMap(
+                        Map.of(player.getId(), player.getNickname())
+                    );
+                    game.setScreen(new LobbyView(game, session, controller));
+                });
+            }
+
+            @Override
+            public void onError(String message) {
+                Gdx.app.postRunnable(() ->
+                    errorLabel.setText("Failed to join lobby: " + message)
+                );
+            }
+        });
+    }
+
+    // BACK TO LOGIN
+    if (backButtonRect.contains(touch)) {
+        game.setScreen(new LogInView(game, session, controller));
+    }
+}
+
+    private void showAlert(String message) {
+        Dialog dialog = new Dialog("Error", uiSkin);
+        Label.LabelStyle labelStyle = new Label.LabelStyle(font, Color.BLACK);
+        Label msgLabel = new Label(message, labelStyle);
+        msgLabel.setWrap(true);
+        dialog.getContentTable()
+            .pad(20)
+            .add(msgLabel)
+            .width(stage.getViewport().getWorldWidth() * 0.8f)
+            .row();
+        dialog.button("OK", true).padTop(10);
+        dialog.pack();
+        dialog.show(stage);
+        // shift down if needed
+        float x = (stage.getViewport().getWorldWidth()  - dialog.getWidth())  / 2f;
+        float y = (stage.getViewport().getWorldHeight() - dialog.getHeight()) / 2f - 150f;
+        dialog.setPosition(x, y);
     }
 
     private TextField.TextFieldStyle createTextFieldStyle() {

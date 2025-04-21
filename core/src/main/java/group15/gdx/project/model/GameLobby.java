@@ -10,12 +10,28 @@ import java.util.Map;
 
 public class GameLobby {
 
-    private final String pin;
+    // remove final so we can set server‑generated PIN
+    private String pin;
     private List<Player> players;
 
     public GameLobby() {
-        this.pin = generateRandomPin();
         this.players = new ArrayList<>();
+        // you can still generate a default pin if you like,
+        // but it will be overwritten by setPin(...) once the server returns it.
+        this.pin = generateRandomPin();
+    }
+
+    /** Optional: create a lobby with a known PIN */
+    public GameLobby(String pin) {
+        this.pin = pin;
+        this.players = new ArrayList<>();
+    }
+
+    public String getPin() {
+        return pin;
+    }
+    public void setPin(String pin) {
+        this.pin = pin;
     }
 
     // Update player list from Firebase map
@@ -34,19 +50,10 @@ public class GameLobby {
         return players;
     }
 
-    public String getPin() {
-        return pin;
-    }
-
     @SuppressWarnings("DefaultLocale")
     private String generateRandomPin() {
         SecureRandom random = new SecureRandom();
         int num = random.nextInt(100000); // 00000 - 99999
         return String.format("%05d", num); // Ensures 5 digits with leading zeroes
     }
-
-    //public String getGamePin() {
-    //    return gamePin;
-    //}
-
 }
