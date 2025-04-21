@@ -70,7 +70,7 @@ public class Leaderboard extends ScreenAdapter {
         stage.addActor(mainTable);
 
         // Title
-        Label titleLabel = new Label("Leaderboard", skin);
+        Label titleLabel = new Label("Scoreboard", skin);
         titleLabel.setFontScale(2f);
         mainTable.add(titleLabel).padBottom(20).center();
         mainTable.row();
