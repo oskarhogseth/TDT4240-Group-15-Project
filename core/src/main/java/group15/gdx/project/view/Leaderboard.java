@@ -58,7 +58,6 @@ public class Leaderboard extends ScreenAdapter {
         api.getHighscores(this.leaderboard, () -> {
             System.out.println("Highscores loaded");
             populateLeaderboardTable();
-            setupUI();
         });
     }
 
