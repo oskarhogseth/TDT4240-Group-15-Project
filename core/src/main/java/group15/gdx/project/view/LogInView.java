@@ -2,9 +2,7 @@ package group15.gdx.project.view;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.*;
@@ -29,8 +27,13 @@ public class LogInView extends ScreenAdapter {
 
     private Texture backgroundTexture;
     private Texture logoTexture;
-    private Texture createGameTexture;
-    private Texture joinGameTexture;
+    private Texture createTexture;
+    private Texture joinTexture;
+    private Texture leaderboardTexture;
+    private Texture howToPlayTexture;
+    private Texture volumeTexture;
+    private Texture muteTexture;
+    private ImageButton volumeButton;
 
     public LogInView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
@@ -41,13 +44,15 @@ public class LogInView extends ScreenAdapter {
         Gdx.input.setInputProcessor(stage);
         batch = new SpriteBatch();
 
-        // Load assets
         backgroundTexture = new Texture("background.png");
         logoTexture = new Texture("wordduel.png");
-        createGameTexture = new Texture("createnewgame.png");
-        joinGameTexture = new Texture("joingame1.png");
+        createTexture = new Texture("createnewgame.png");
+        joinTexture = new Texture("joingame1.png");
+        leaderboardTexture = new Texture("scoreboard.png");
+        howToPlayTexture = new Texture("howtoplay.png");
+        volumeTexture = new Texture("volume.png");
+        muteTexture = new Texture("mute.png");
 
-        // Load skin and Cinzel font
         skin = new Skin(Gdx.files.internal("vhs.json"));
         cinzelFont = loadCinzelFont(30);
         skin.get(Label.LabelStyle.class).font = cinzelFont;
@@ -56,44 +61,75 @@ public class LogInView extends ScreenAdapter {
     }
 
     private void setupUI() {
-        float screenHeight = stage.getViewport().getWorldHeight();
         float screenWidth = stage.getViewport().getWorldWidth();
+        float screenHeight = stage.getViewport().getWorldHeight();
 
-        Table table = new Table();
-        table.setFillParent(true);
-        table.center();
-        stage.addActor(table);
+        Table root = new Table();
+        root.setFillParent(true);
+        stage.addActor(root);
 
+        // Logo
+        Image logo = new Image(logoTexture);
+        logo.setSize(screenWidth * 0.8f, screenHeight * 0.2f);
+        root.add(logo).colspan(2).padTop(150).padBottom(80).center();
+        root.row();
 
-        Image logoImage = new Image(logoTexture);
-        logoImage.setSize(screenWidth * 0.8f, screenHeight * 0.25f);
-        table.add(logoImage).colspan(2).padBottom(screenHeight * 0.07f).center();
-        table.row();
+        // Buttons column
+        Table buttonCol = new Table();
+        float spacing = 80f;
 
+        buttonCol.add(makeMenuButton(createTexture, () -> game.setScreen(new CreateGameView(game, session, controller))))
+                .padBottom(spacing);
+        buttonCol.row();
 
-        ImageButton createButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(createGameTexture)));
-        createButton.addListener(new ClickListener() {
+        buttonCol.add(makeMenuButton(joinTexture, () -> game.setScreen(new JoinGameView(game, session, controller))))
+                .padBottom(spacing);
+        buttonCol.row();
+
+        buttonCol.add(makeMenuButton(leaderboardTexture, () -> {
+            // TODO: Leaderboard
+        })).padBottom(spacing);
+        buttonCol.row();
+
+        buttonCol.add(makeMenuButton(howToPlayTexture, () -> {
+            // TODO: HowToPlay
+        }));
+
+        root.add(buttonCol).center().expand();
+
+        // Volume toggle icon (top-right)
+        TextureRegionDrawable iconDrawable = new TextureRegionDrawable(
+                new TextureRegion(game.isMuted() ? muteTexture : volumeTexture));
+        volumeButton = new ImageButton(iconDrawable);
+        volumeButton.setSize(100, 100);
+        volumeButton.setPosition(screenWidth - 110, screenHeight - 110);
+        volumeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new CreateGameView(game, session, controller));
+                game.toggleMute();
+                TextureRegion region = new TextureRegion(game.isMuted() ? muteTexture : volumeTexture);
+                volumeButton.getStyle().imageUp = new TextureRegionDrawable(region);
             }
         });
+        stage.addActor(volumeButton);
+    }
 
+    private ImageButton makeMenuButton(Texture texture, Runnable onClick) {
+        TextureRegionDrawable drawable = new TextureRegionDrawable(new TextureRegion(texture));
+        drawable.setMinWidth(600);
+        drawable.setMinHeight(200);
 
-        ImageButton joinButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(joinGameTexture)));
-        joinButton.addListener(new ClickListener() {
+        ImageButton.ImageButtonStyle style = new ImageButton.ImageButtonStyle();
+        style.imageUp = drawable;
+
+        ImageButton button = new ImageButton(style);
+        button.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new JoinGameView(game, session, controller));
+                onClick.run();
             }
         });
-
-
-        Table buttonRow = new Table();
-        buttonRow.add(createButton).width(180).height(70).padRight(20);
-        buttonRow.add(joinButton).width(180).height(70).padLeft(20);
-
-        table.add(buttonRow).colspan(2).padTop(screenHeight * 0.03f).expandY().bottom();
+        return button;
     }
 
     private BitmapFont loadCinzelFont(int size) {
@@ -128,8 +164,12 @@ public class LogInView extends ScreenAdapter {
         batch.dispose();
         backgroundTexture.dispose();
         logoTexture.dispose();
-        createGameTexture.dispose();
-        joinGameTexture.dispose();
+        createTexture.dispose();
+        joinTexture.dispose();
+        leaderboardTexture.dispose();
+        howToPlayTexture.dispose();
+        volumeTexture.dispose();
+        muteTexture.dispose();
         cinzelFont.dispose();
         skin.dispose();
     }

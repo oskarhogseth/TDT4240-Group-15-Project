@@ -20,10 +20,13 @@ font-title-export.fnt
 gladiator.mp3
 hardbronze.png
 hardyellow.png
+howtoplay.png
 info_button.png
 joingame.png
+joingame1.png
 leave.png
 leavegame.png
+mute.png
 nextround.png
 normalbronze.png
 normalyellow.png
@@ -40,6 +43,7 @@ threeyellow.png
 vhs.atlas
 vhs.json
 vhs.png
+volume.png
 wordduel.png
 x.png
 yellowbutton.png
