@@ -5,10 +5,11 @@ import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.scenes.scene2d.*;
-import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.*;
-import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
@@ -22,132 +23,85 @@ public class CreateGameView extends ScreenAdapter {
 
     private Stage stage;
     private SpriteBatch batch;
-    private Skin skin;
-    private BitmapFont cinzelFont;
+    private BitmapFont font;
     private Texture backgroundTexture;
     private Texture createButtonTexture;
+    private Texture backButtonTexture;
+    private Texture whiteBox;
+    private Texture logoTexture;
 
-    private TextField nameField;
-    private SelectBox<String> roundsSelect;
-    private SelectBox<String> difficultySelect;
+    private Texture threeBronze, fiveBronze, sevenBronze;
+    private Texture threeYellow, fiveYellow, sevenYellow;
+    private Texture normalBronze, hardBronze;
+    private Texture normalYellow, hardYellow;
+
+    private Rectangle nicknameBox;
+    private TextField nicknameField;
+    private Rectangle createButtonRect;
+    private Rectangle backButtonRect;
+
+    private Rectangle[] roundRects;
+    private Rectangle[] difficultyRects;
+
+    private final String[] roundOptions = {"3", "5", "7"};
+    private final String[] difficultyOptions = {"normal", "hard"};
+
+    private String selectedRounds = "3";
+    private String selectedDifficulty = "normal";
 
     public CreateGameView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
         this.session = session;
         this.controller = controller;
 
-        stage = new Stage(new FitViewport(1080, 2400));
+        stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
         batch = new SpriteBatch();
 
         backgroundTexture = new Texture("background.png");
         createButtonTexture = new Texture("creategame.png");
-        skin = new Skin(Gdx.files.internal("vhs.json"));
+        backButtonTexture = new Texture("back.png");
+        logoTexture = new Texture("wordduel.png");
 
-        cinzelFont = loadCinzelFont(64);
-        skin.get(Label.LabelStyle.class).font = cinzelFont;
-        skin.get(TextButton.TextButtonStyle.class).font = cinzelFont;
-        skin.get(TextField.TextFieldStyle.class).font = cinzelFont;
+        whiteBox = createSolidColorTexture(Color.WHITE);
 
-        // ✅ Register SelectBoxStyle before using
-        SelectBox.SelectBoxStyle selectBoxStyle = new SelectBox.SelectBoxStyle();
-        selectBoxStyle.font = cinzelFont;
-        selectBoxStyle.fontColor = Color.BLACK;
-        selectBoxStyle.background = skin.newDrawable("textfield", Color.WHITE);
-        selectBoxStyle.scrollStyle = new ScrollPane.ScrollPaneStyle();
-        selectBoxStyle.listStyle = new List.ListStyle();
-        selectBoxStyle.listStyle.font = cinzelFont;
-        selectBoxStyle.listStyle.selection = skin.newDrawable("textfield", Color.LIGHT_GRAY);
-        selectBoxStyle.listStyle.fontColorSelected = Color.BLACK;
-        selectBoxStyle.listStyle.fontColorUnselected = Color.DARK_GRAY;
-        skin.add("default", selectBoxStyle);
+        threeBronze = new Texture("threebronze.png");
+        fiveBronze = new Texture("fivebronze.png");
+        sevenBronze = new Texture("sevenbronze.png");
+        threeYellow = new Texture("threeyellow.png");
+        fiveYellow = new Texture("fiveyellow.png");
+        sevenYellow = new Texture("sevenyellow.png");
 
-        setupUI();
-    }
+        normalBronze = new Texture("normalbronze.png");
+        hardBronze = new Texture("hardbronze.png");
+        normalYellow = new Texture("normalyellow.png");
+        hardYellow = new Texture("hardyellow.png");
 
-    private void setupUI() {
-        float screenWidth = stage.getViewport().getWorldWidth();
-        float screenHeight = stage.getViewport().getWorldHeight();
+        FreeTypeFontGenerator gen = new FreeTypeFontGenerator(Gdx.files.internal("cinzel.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        param.size = 54;
+        param.color = Color.GRAY;
+        font = gen.generateFont(param);
+        gen.dispose();
 
-        Table table = new Table();
-        table.setFillParent(true);
-        table.top().padTop(screenHeight * 0.05f);
-        stage.addActor(table);
+        nicknameField = new TextField("", createTextFieldStyle());
+        nicknameField.setMessageText("Nickname");
+        nicknameField.setSize(720, 140);
+        nicknameField.setPosition(180, 1810);
+        stage.addActor(nicknameField);
+        nicknameBox = new Rectangle(170, 1795, 740, 160);
 
-        Label prompt = new Label("Enter your nickname", skin);
-        prompt.setColor(Color.BLACK);
-        prompt.setFontScale(1.4f);
-        table.add(prompt).padBottom(screenHeight * 0.03f).colspan(2);
-        table.row();
+        roundRects = new Rectangle[3];
+        difficultyRects = new Rectangle[2];
+        for (int i = 0; i < 3; i++) {
+            roundRects[i] = new Rectangle(130 + i * 270, 1420, 240, 130);
+        }
+        for (int i = 0; i < 2; i++) {
+            difficultyRects[i] = new Rectangle(210 + i * 330, 1120, 300, 130);
+        }
 
-        nameField = new TextField("", skin);
-        nameField.setMessageText("Nickname");
-        table.add(nameField)
-                .width(screenWidth * 0.75f)
-                .height(screenHeight * 0.07f)
-                .colspan(2)
-                .padBottom(screenHeight * 0.05f);
-        table.row();
-
-        // Rounds selector with placeholder
-        Label roundsLabel = new Label("Rounds:", skin);
-        roundsLabel.setColor(Color.BLACK);
-        roundsLabel.setFontScale(1.2f);
-        table.add(roundsLabel).padRight(20).right();
-
-        roundsSelect = new SelectBox<>(skin);
-        roundsSelect.setItems("--", "3", "5", "7");
-        roundsSelect.setSelected("--");
-        table.add(roundsSelect).width(160).left();
-        table.row().padBottom(screenHeight * 0.06f);
-
-        // Difficulty selector
-        Label diffLabel = new Label("Difficulty:", skin);
-        diffLabel.setColor(Color.BLACK);
-        diffLabel.setFontScale(1.2f);
-        table.add(diffLabel).padRight(20).right();
-
-        difficultySelect = new SelectBox<>(skin);
-        difficultySelect.setItems("None selected", "Easy", "Medium", "Hard");
-        difficultySelect.setSelected("None selected");
-        table.add(difficultySelect).width(200).left();
-        table.row().padBottom(screenHeight * 0.06f);
-
-        // Create game button
-        ImageButton createButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(createButtonTexture)));
-        createButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                String nickname = nameField.getText().trim();
-                String roundStr = roundsSelect.getSelected();
-                String difficulty = difficultySelect.getSelected();
-
-                Integer rounds = "--".equals(roundStr) ? null : Integer.parseInt(roundStr);
-
-                if (!nickname.isEmpty()) {
-                    System.out.println("Nickname: " + nickname);
-                    System.out.println("Rounds: " + (rounds != null ? rounds : "--"));
-                    System.out.println("Difficulty: " + difficulty);
-
-                    Player player = new Player("id-" + nickname, nickname);
-                    session.setLocalPlayer(player);
-                    session.getLobby().addPlayer(player);
-                    game.setScreen(new LobbyView(game, session, controller));
-                }
-            }
-        });
-
-        table.add(createButton).size(300, 100).colspan(2).padTop(screenHeight * 0.03f);
-    }
-
-    private BitmapFont loadCinzelFont(int size) {
-        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("cinzel.ttf"));
-        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        parameter.size = size;
-        parameter.color = Color.BLACK;
-        BitmapFont font = generator.generateFont(parameter);
-        generator.dispose();
-        return font;
+        createButtonRect = new Rectangle(324, 450, 432, 144);
+        backButtonRect = new Rectangle(324, 200, 432, 144);
     }
 
     @Override
@@ -155,24 +109,100 @@ public class CreateGameView extends ScreenAdapter {
         Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        batch.setProjectionMatrix(stage.getCamera().combined);
         batch.begin();
-        batch.draw(backgroundTexture, 0, 0,
-                stage.getViewport().getWorldWidth(),
-                stage.getViewport().getWorldHeight());
-        batch.end();
+        batch.draw(backgroundTexture, 0, 0, 1080, 2400);
 
+        // Logo at top center
+        batch.draw(logoTexture, 190, 2100, 700, 180);
+
+        font.draw(batch, "ENTER NICKNAME", 180, 2010); // moved 50px down
+        batch.draw(whiteBox, nicknameBox.x, nicknameBox.y, nicknameBox.width, nicknameBox.height);
+
+        font.draw(batch, "SELECT ROUNDS", 150, 1610); // moved 50px down
+        drawButton(batch, roundRects[0], selectedRounds.equals("3") ? threeYellow : threeBronze);
+        drawButton(batch, roundRects[1], selectedRounds.equals("5") ? fiveYellow : fiveBronze);
+        drawButton(batch, roundRects[2], selectedRounds.equals("7") ? sevenYellow : sevenBronze);
+
+        font.draw(batch, "SELECT DIFFICULTY", 150, 1310); // moved 50px down
+        drawButton(batch, difficultyRects[0], selectedDifficulty.equals("normal") ? normalYellow : normalBronze);
+        drawButton(batch, difficultyRects[1], selectedDifficulty.equals("hard") ? hardYellow : hardBronze);
+
+        batch.draw(createButtonTexture, createButtonRect.x, createButtonRect.y, createButtonRect.width, createButtonRect.height);
+        batch.draw(backButtonTexture, backButtonRect.x, backButtonRect.y, backButtonRect.width, backButtonRect.height);
+
+        batch.end();
         stage.act(delta);
         stage.draw();
+
+        handleInput();
+    }
+
+    private void drawButton(SpriteBatch batch, Rectangle rect, Texture texture) {
+        batch.draw(texture, rect.x, rect.y, rect.width, rect.height);
+    }
+
+    private void handleInput() {
+        if (Gdx.input.justTouched()) {
+            Vector2 touch = new Vector2(Gdx.input.getX(), Gdx.input.getY());
+            stage.getViewport().unproject(touch);
+
+            for (int i = 0; i < roundRects.length; i++) {
+                if (roundRects[i].contains(touch)) {
+                    selectedRounds = roundOptions[i];
+                }
+            }
+
+            for (int i = 0; i < difficultyRects.length; i++) {
+                if (difficultyRects[i].contains(touch)) {
+                    selectedDifficulty = difficultyOptions[i];
+                }
+            }
+
+            if (createButtonRect.contains(touch)) {
+                String nickname = nicknameField.getText().trim();
+                if (!nickname.isEmpty()) {
+                    Player player = new Player("id-" + nickname, nickname);
+                    session.setLocalPlayer(player);
+                    session.getLobby().addPlayer(player);
+                    game.setScreen(new LobbyView(game, session, controller));
+                }
+            }
+
+            if (backButtonRect.contains(touch)) {
+                game.setScreen(new LogInView(game, session, controller));
+            }
+        }
+    }
+
+    private TextField.TextFieldStyle createTextFieldStyle() {
+        TextField.TextFieldStyle style = new TextField.TextFieldStyle();
+        style.font = font;
+        style.fontColor = Color.BLACK;
+        return style;
+    }
+
+    private Texture createSolidColorTexture(Color color) {
+        Pixmap pixmap = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
+        pixmap.setColor(color);
+        pixmap.fill();
+        Texture tex = new Texture(pixmap);
+        pixmap.dispose();
+        return tex;
     }
 
     @Override
     public void dispose() {
         stage.dispose();
         batch.dispose();
+        font.dispose();
         backgroundTexture.dispose();
         createButtonTexture.dispose();
-        skin.dispose();
-        cinzelFont.dispose();
+        backButtonTexture.dispose();
+        logoTexture.dispose();
+        whiteBox.dispose();
+        threeBronze.dispose(); fiveBronze.dispose(); sevenBronze.dispose();
+        threeYellow.dispose(); fiveYellow.dispose(); sevenYellow.dispose();
+        normalBronze.dispose(); hardBronze.dispose();
+        normalYellow.dispose(); hardYellow.dispose();
     }
 }
