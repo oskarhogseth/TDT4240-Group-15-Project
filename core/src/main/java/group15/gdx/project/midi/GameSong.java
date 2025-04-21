@@ -13,7 +13,7 @@ public class GameSong {
     private float volume = 1.0f; // use later maybe?
 
     public GameSong() {
-        music = Gdx.audio.newMusic(Gdx.files.internal("game_song.mp3"));
+        music = Gdx.audio.newMusic(Gdx.files.internal("gladiator.mp3"));
         music.setLooping(true);
         isPlaying = false;
     }
