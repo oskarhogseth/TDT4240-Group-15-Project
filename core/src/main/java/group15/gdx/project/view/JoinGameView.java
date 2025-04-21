@@ -7,11 +7,7 @@ import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-
-import com.badlogic.gdx.scenes.scene2d.ui.*;
-
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
@@ -42,7 +38,6 @@ public class JoinGameView extends ScreenAdapter {
     private Stage stage;
     private SpriteBatch batch;
     private BitmapFont font;
-
     private Texture backgroundTexture;
     private Texture joinButtonTexture;
     private Texture backButtonTexture;
@@ -52,14 +47,12 @@ public class JoinGameView extends ScreenAdapter {
     private Texture muteTexture;
     private ImageButton volumeButton;
 
-    private TextField nicknameField;
     private TextField pinField;
-    private Rectangle nicknameBox;
-    private Rectangle pinBox;
+    private TextField nicknameField;
     private Rectangle joinButtonRect;
     private Rectangle backButtonRect;
-
-    private Label errorLabel;
+    private Rectangle pinBox;
+    private Rectangle nicknameBox;
 
     public JoinGameView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
@@ -76,36 +69,32 @@ public class JoinGameView extends ScreenAdapter {
         logoTexture = new Texture("wordduel.png");
         volumeTexture = new Texture("volume.png");
         muteTexture = new Texture("mute.png");
+
         whiteBox = createSolidColorTexture(Color.WHITE);
 
         FreeTypeFontGenerator gen = new FreeTypeFontGenerator(Gdx.files.internal("cinzel.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
         param.size = 54;
-        param.color = Color.GRAY;
+        param.color = Color.BLACK;
         font = gen.generateFont(param);
         gen.dispose();
 
         nicknameField = new TextField("", createTextFieldStyle());
         nicknameField.setMessageText("Nickname");
-        nicknameField.setSize(720, 120);
-        nicknameField.setPosition(180, 1740);
+        nicknameField.setSize(720, 140);
+        nicknameField.setPosition(180, 1600); // moved down a bit
         stage.addActor(nicknameField);
-        nicknameBox = new Rectangle(170, 1735, 740, 120);
+        nicknameBox = new Rectangle(170, 1585, 740, 160);
 
         pinField = new TextField("", createTextFieldStyle());
         pinField.setMessageText("PIN");
-        pinField.setSize(720, 120);
-        pinField.setPosition(180, 1440);
+        pinField.setSize(720, 140);
+        pinField.setPosition(180, 1280); // moved down a bit
         stage.addActor(pinField);
-        pinBox = new Rectangle(170, 1435, 740, 120);
+        pinBox = new Rectangle(170, 1265, 740, 160);
 
-        errorLabel = new Label("", new Label.LabelStyle(font, Color.RED));
-        errorLabel.setFontScale(1f);
-        errorLabel.setPosition(180, 700);
-        stage.addActor(errorLabel);
-
-        joinButtonRect = new Rectangle(324, 500, 432, 144);
-        backButtonRect = new Rectangle(324, 250, 432, 144);
+        joinButtonRect = new Rectangle(324, 450, 432, 144);
+        backButtonRect = new Rectangle(324, 200, 432, 144);
 
         setupVolumeButton();
     }
@@ -118,7 +107,7 @@ public class JoinGameView extends ScreenAdapter {
         volumeButton.setPosition(stage.getViewport().getWorldWidth() - 110, stage.getViewport().getWorldHeight() - 110);
         volumeButton.addListener(new ClickListener() {
             @Override
-            public void clicked(InputEvent event, float x, float y) {
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
                 game.toggleMute();
                 TextureRegion region = new TextureRegion(game.isMuted() ? muteTexture : volumeTexture);
                 volumeButton.getStyle().imageUp = new TextureRegionDrawable(region);
@@ -134,80 +123,73 @@ public class JoinGameView extends ScreenAdapter {
 
         batch.begin();
         batch.draw(backgroundTexture, 0, 0, 1080, 2400);
-        batch.draw(logoTexture, 108, 1980, 864, 240);
 
-        font.draw(batch, "ENTER NICKNAME", 150, 1900);
+        // draw logo the same size and placement as in LogInView/CreateGameView
+        batch.draw(logoTexture, 108, 1980, 864, 240); // 80% of width, centered
+
+        font.draw(batch, "ENTER NICKNAME", 180, 1800);
         batch.draw(whiteBox, nicknameBox.x, nicknameBox.y, nicknameBox.width, nicknameBox.height);
 
-        font.draw(batch, "ENTER PIN", 150, 1600);
+        font.draw(batch, "ENTER PIN", 180, 1480);
         batch.draw(whiteBox, pinBox.x, pinBox.y, pinBox.width, pinBox.height);
 
         batch.draw(joinButtonTexture, joinButtonRect.x, joinButtonRect.y, joinButtonRect.width, joinButtonRect.height);
         batch.draw(backButtonTexture, backButtonRect.x, backButtonRect.y, backButtonRect.width, backButtonRect.height);
 
-        font.setColor(Color.RED);
-        if (!errorLabel.getText().toString().isEmpty()) {
-            font.draw(batch, errorLabel.getText().toString(), 180, 650);
-        }
-        font.setColor(Color.GRAY);
-
         batch.end();
 
-        handleInput();
         stage.act(delta);
         stage.draw();
+
+        handleInput();
     }
 
-private void handleInput() {
-    if (!Gdx.input.justTouched()) return;
+    private void handleInput() {
+        if (!Gdx.input.justTouched()) return;
 
-    Vector2 touch = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-    stage.getViewport().unproject(touch);
+        Vector2 touch = new Vector2(Gdx.input.getX(), Gdx.input.getY());
+        stage.getViewport().unproject(touch);
 
-    // JOIN GAME
-    if (joinButtonRect.contains(touch)) {
-        String pin = pinField.getText().trim();
-        String nickname = nicknameField.getText().trim();
+        // JOIN GAME
+        if (joinButtonRect.contains(touch)) {
+            String pin      = pinField.getText().trim();
+            String nickname = nicknameField.getText().trim();
+            if (pin.isEmpty() || nickname.isEmpty()) return;
 
-        if (nickname.isEmpty()) {
-            errorLabel.setText("Please enter a nickname");
-            return;
-        }
+            // Create and store our local player
+            Player player = new Player("id-" + nickname, nickname);
+            session.setLocalPlayer(player);
 
-        if (pin.isEmpty() || pin.length() != 4) {
-            errorLabel.setText("Please enter a 4-digit PIN");
-            return;
-        }
+            // Attempt to join via Firebase
+            controller.joinLobby(pin, nickname, new LobbyServiceInterface.JoinCallback() {
+                @Override
+                public void onSuccess() {
+                    Gdx.app.postRunnable(() -> {
+                        // Record the lobby PIN we just joined
+                        session.getLobby().setPin(pin);
+                        // Optionally seed our own entry until real update arrives
+                        session.getLobby().updatePlayersFromMap(
+                            Map.of(player.getId(), player.getNickname())
+                        );
+                        // Navigate into the shared LobbyView
+                        game.setScreen(new LobbyView(game, session, controller));
+                    });
+                }
 
-        Player player = new Player("id-" + nickname, nickname);
-        session.setLocalPlayer(player);
-
-        controller.joinLobby(pin, nickname, new LobbyServiceInterface.JoinCallback() {
-            @Override
-            public void onSuccess() {
-                Gdx.app.postRunnable(() -> {
-                    session.getLobby().setPin(pin);
-                    session.getLobby().updatePlayersFromMap(
-                        Map.of(player.getId(), player.getNickname())
+                @Override
+                public void onError(String message) {
+                    Gdx.app.postRunnable(() ->
+                        showAlert("Failed to join lobby: " + message)
                     );
-                    game.setScreen(new LobbyView(game, session, controller));
-                });
-            }
+                }
+            });
+        }
 
-            @Override
-            public void onError(String message) {
-                Gdx.app.postRunnable(() ->
-                    errorLabel.setText("Failed to join lobby: " + message)
-                );
-            }
-        });
+        // BACK TO LOGIN
+        if (backButtonRect.contains(touch)) {
+            game.setScreen(new LogInView(game, session, controller));
+        }
     }
-
-    // BACK TO LOGIN
-    if (backButtonRect.contains(touch)) {
-        game.setScreen(new LogInView(game, session, controller));
-    }
-}
 
     private void showAlert(String message) {
         Dialog dialog = new Dialog("Error", uiSkin);
