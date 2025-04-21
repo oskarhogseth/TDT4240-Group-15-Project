@@ -38,11 +38,6 @@ public class GameLobby {
         return pin;
     }
 
-    public void setPin(String pin) {
-        this.pin = pin;
-    }
-
-
     @SuppressWarnings("DefaultLocale")
     private String generateRandomPin() {
         SecureRandom random = new SecureRandom();
