@@ -45,7 +45,7 @@ public class LogInView extends ScreenAdapter {
         backgroundTexture = new Texture("background.png");
         logoTexture = new Texture("wordduel.png");
         createGameTexture = new Texture("createnewgame.png");
-        joinGameTexture = new Texture("joingame.png");
+        joinGameTexture = new Texture("joingame1.png");
 
         // Load skin and Cinzel font
         skin = new Skin(Gdx.files.internal("vhs.json"));
