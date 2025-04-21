@@ -12,12 +12,19 @@ import com.badlogic.gdx.input.GestureDetector;
 import com.badlogic.gdx.input.GestureDetector.GestureListener;
 import com.badlogic.gdx.math.Vector2;
 
+import group15.gdx.project.controller.LobbyController;
+import group15.gdx.project.controller.LobbyServiceInterface;
+import group15.gdx.project.midi.GameSong;
+import group15.gdx.project.model.GameSession;
+import group15.gdx.project.view.LogInView;
+
 public class Launcher extends Game implements GestureListener {
 
     private GameSession session;
     private Leaderboard leaderboard;
     private LobbyServiceInterface lobbyService;
     private LobbyController controller;
+    private GameSong gameSong;
 
     API api;
 
@@ -38,6 +45,8 @@ public class Launcher extends Game implements GestureListener {
     public void create() {
         session = new GameSession();
         controller = new LobbyController(lobbyService);
+        gameSong = new GameSong();
+        gameSong.play();
 
         Gdx.input.setInputProcessor(new GestureDetector(this));
 
