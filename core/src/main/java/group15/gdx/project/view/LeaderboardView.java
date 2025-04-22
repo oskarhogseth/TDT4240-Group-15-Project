@@ -11,46 +11,35 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.*;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
-import group15.gdx.project.API;
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.LeaderboardController;
 import group15.gdx.project.model.GameSession;
-import group15.gdx.project.model.Player;
 import group15.gdx.project.model.Score;
 
-import java.util.ArrayList;
-
-public class Leaderboard extends ScreenAdapter {
+public class LeaderboardView extends ScreenAdapter {
 
     private final Launcher game;
     private final GameSession session;
+    private final LeaderboardController controller;
+
     private final Stage stage;
-    private final Skin skin;
     private final SpriteBatch batch;
+    private final Skin skin;
 
-    private BitmapFont font;
-    private BitmapFont boldFont;
-
-    private final Texture backgroundTexture;
-    private final Texture logoTexture;
-    private final Texture volumeTexture;
-    private final Texture muteTexture;
-    private final Texture backButtonTexture;
-
+    private BitmapFont font, boldFont;
+    private final Table leaderboardTable = new Table();
+    private Texture backgroundTexture, logoTexture, volumeTexture, muteTexture, backButtonTexture;
     private ImageButton volumeButton;
 
-    private final Table leaderboardTable;
-    private final ArrayList<Score> leaderboard = new ArrayList<>();
-
-    private final API api;
-
-    public Leaderboard(Launcher game, GameSession session) {
+    public LeaderboardView(Launcher game, GameSession session, LeaderboardController controller) {
         this.game = game;
         this.session = session;
-        this.stage = new Stage(new ScreenViewport());
-        this.batch = new SpriteBatch();
+        this.controller = controller;
 
+        stage = new Stage(new ScreenViewport());
+        batch = new SpriteBatch();
+        skin = new Skin(Gdx.files.internal("vhs.json"));
         Gdx.input.setInputProcessor(stage);
-        this.skin = new Skin(Gdx.files.internal("vhs.json"));
 
         backgroundTexture = new Texture("background.png");
         logoTexture = new Texture("wordduel.png");
@@ -62,21 +51,10 @@ public class Leaderboard extends ScreenAdapter {
         boldFont = loadFont("cinzel_bold.ttf", 52);
         skin.get(Label.LabelStyle.class).font = font;
 
-        leaderboardTable = new Table(skin);
-        leaderboardTable.top();
-
-        api = game.getAPI();
-        for (Player player : session.getLobby().getPlayers()) {
-            api.submitScore(new Score(player.getName(), player.getScore()));
-        }
-
-        fetchLeaderboard();
         setupUI();
         setupVolumeToggle();
-    }
 
-    private void fetchLeaderboard() {
-        api.getHighscores(leaderboard, () -> Gdx.app.postRunnable(this::populateLeaderboardTable));
+        controller.fetchScores(this::populateLeaderboardTable);
     }
 
     private void setupUI() {
@@ -85,23 +63,20 @@ public class Leaderboard extends ScreenAdapter {
 
         Table root = new Table();
         root.setFillParent(true);
-        root.top().padTop(600); // ⬇ Move down to avoid logo
+        root.top().padTop(600);
         stage.addActor(root);
 
-        // Scoreboard title
         Label title = new Label("LEADERBOARD", new Label.LabelStyle(boldFont, Color.BLACK));
         title.setFontScale(1.8f);
         root.add(title).padBottom(40).center();
         root.row();
 
-        // ScrollPane
         ScrollPane scrollPane = new ScrollPane(leaderboardTable, skin);
         scrollPane.setFadeScrollBars(false);
         scrollPane.setScrollingDisabled(true, false);
         root.add(scrollPane).height(sh * 0.5f).width(sw * 0.8f);
         root.row();
 
-        // Back Button
         ImageButton backButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(backButtonTexture)));
         backButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
@@ -110,7 +85,6 @@ public class Leaderboard extends ScreenAdapter {
         });
         root.add(backButton).size(300, 100).padTop(50);
 
-        // Logo (same placement as other screens)
         Image logo = new Image(logoTexture);
         logo.setSize(864, 240);
         logo.setPosition(108, 1980);
@@ -126,9 +100,9 @@ public class Leaderboard extends ScreenAdapter {
         leaderboardTable.add(new Label("Score", headerStyle)).width(120).align(Align.center);
         leaderboardTable.row();
 
-        int count = Math.min(leaderboard.size(), 50);
+        int count = Math.min(controller.getScores().size(), 50);
         for (int i = 0; i < count; i++) {
-            Score s = leaderboard.get(i);
+            Score s = controller.getScores().get(i);
             leaderboardTable.add(new Label(String.valueOf(i + 1), skin)).align(Align.center);
             leaderboardTable.add(new Label(s.getPlayer(), skin)).align(Align.left);
             leaderboardTable.add(new Label(String.valueOf(s.getScore()), skin)).align(Align.center);

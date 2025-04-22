@@ -15,6 +15,9 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
+import group15.gdx.project.controller.HowToPlayController;
+
+
 
 public class HowToPlayView extends ScreenAdapter {
 
@@ -33,11 +36,13 @@ public class HowToPlayView extends ScreenAdapter {
     private Texture muteTexture;
     private Texture backButtonTexture;
     private ImageButton volumeButton;
+    private final HowToPlayController howToPlayController;
 
     public HowToPlayView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
         this.gameSession = session;
         this.controller = controller;
+        this.howToPlayController = new HowToPlayController();
 
         stage = new Stage(new FitViewport(1080, 2400));
         Gdx.input.setInputProcessor(stage);
@@ -105,7 +110,9 @@ public class HowToPlayView extends ScreenAdapter {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new LogInView(game, gameSession, controller));
+                howToPlayController.onBackPressed(() ->
+                        game.setScreen(new LogInView(game, gameSession, controller))
+                );
             }
         });
 
@@ -115,6 +122,7 @@ public class HowToPlayView extends ScreenAdapter {
         bottom.add(backButton).size(sw * 0.4f, sh * 0.06f);
         stage.addActor(bottom);
     }
+
 
     private void setupVolumeButton() {
         TextureRegionDrawable icon = new TextureRegionDrawable(new TextureRegion(
