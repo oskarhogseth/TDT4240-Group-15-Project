@@ -10,8 +10,7 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
@@ -21,6 +20,7 @@ import group15.gdx.project.Launcher;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.LetterSet;
 import group15.gdx.project.model.Player;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -36,6 +36,8 @@ public class GameView extends ScreenAdapter {
     private BitmapFont cinzelFont;
 
     private Texture backgroundTexture, blockTexture, enterTexture, nextRoundTexture;
+    private Texture leaveTexture, cancelTexture;
+
     private Table rootTable;
     private Table pyramidContainer;
 
@@ -61,6 +63,8 @@ public class GameView extends ScreenAdapter {
         blockTexture = new Texture("block.png");
         enterTexture = new Texture("enterword.png");
         nextRoundTexture = new Texture("nextround.png");
+        leaveTexture = new Texture("leavegame.png");
+        cancelTexture = new Texture("cancel.png");
 
         skin = new Skin(Gdx.files.internal("vhs.json"));
         cinzelFont = loadCinzelFont(32);
@@ -92,8 +96,9 @@ public class GameView extends ScreenAdapter {
 
         TextButton closeButton = new TextButton("X", skin);
         closeButton.addListener(new ClickListener() {
-            @Override public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new ResultView(game, session, game.getLobbyController()));
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                showLeaveConfirmation();
             }
         });
 
@@ -192,6 +197,53 @@ public class GameView extends ScreenAdapter {
             }
         });
         rootTable.add(nextRoundButton).width(180).height(70).colspan(3).center();
+    }
+
+    private void showLeaveConfirmation() {
+        Dialog dialog = new Dialog("", skin);
+
+        Label.LabelStyle labelStyle = new Label.LabelStyle(cinzelFont, Color.BLACK);
+        Label msgLabel = new Label("Are you sure you want to leave the game?", labelStyle);
+        msgLabel.setWrap(true);
+        dialog.getContentTable()
+                .pad(20)
+                .add(msgLabel)
+                .width(stage.getViewport().getWorldWidth() * 0.8f)
+                .row();
+
+        ImageButton leaveBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(leaveTexture)));
+        leaveBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                dialog.hide();
+                String pin = session.getLobby().getPin();
+                String playerId = session.getLocalPlayer().getId();
+
+                game.getLobbyController().leaveGame(pin, playerId, () -> {
+                    Gdx.app.postRunnable(() ->
+                            game.setScreen(new LogInView(game, session, game.getLobbyController()))
+                    );
+                });
+            }
+        });
+
+        ImageButton cancelBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(cancelTexture)));
+        cancelBtn.addListener(new ClickListener() {
+            @Override public void clicked(InputEvent event, float x, float y) {
+                dialog.hide();
+            }
+        });
+
+        Table btnTable = new Table();
+        btnTable.add(leaveBtn).size(240, 120).padRight(20);
+        btnTable.add(cancelBtn).size(240, 120);
+        dialog.getButtonTable().add(btnTable).center().padTop(30);
+        dialog.pack();
+        dialog.show(stage);
+
+        float x = (stage.getViewport().getWorldWidth() - dialog.getWidth()) / 2f;
+        float y = (stage.getViewport().getWorldHeight() - dialog.getHeight()) / 2f - 200f;
+        dialog.setPosition(x, y);
     }
 
     private void buildPyramid(char[] letters) {
@@ -301,6 +353,10 @@ public class GameView extends ScreenAdapter {
         updateWordDisplay();
     }
 
+    private boolean isHost() {
+        return session.getLocalPlayer().getUid().equals(session.getLobby().getPlayers().get(0).getUid());
+    }
+
     public void updateScore() {
         pointsLabel.setText("YOU HAVE " + player.getScore() + " POINTS");
     }
@@ -319,5 +375,7 @@ public class GameView extends ScreenAdapter {
         blockTexture.dispose();
         enterTexture.dispose();
         nextRoundTexture.dispose();
+        leaveTexture.dispose();
+        cancelTexture.dispose();
     }
 }

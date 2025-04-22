@@ -26,6 +26,9 @@ public class LobbyController {
     ) {
         service.joinLobby(pin, nickname, cb);
     }
+    public void leaveGame(String pin, String playerId, Runnable onComplete) {
+        service.leaveGame(pin, playerId, onComplete);
+    }
 
     public void listenToLobby(String pin, LobbyServiceInterface.PlayerUpdateCallback cb) {
         service.listenToLobby(pin, cb);

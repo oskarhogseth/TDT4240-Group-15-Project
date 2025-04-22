@@ -2,6 +2,8 @@ package group15.gdx.project.android;
 
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.tasks.Tasks;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.firestore.FirebaseFirestore;
 import com.google.firebase.firestore.ListenerRegistration;
 import com.google.firebase.firestore.DocumentReference;
@@ -42,7 +44,13 @@ public class AndroidLobbyService implements LobbyServiceInterface {
         update.put("sortedKey",  letters.getSortedKey());
         db.collection("lobbies").document(pin).update(update);
     }
-
+    @Override
+    public void leaveGame(String pin, String playerId, Runnable onComplete) {
+        DatabaseReference ref = FirebaseDatabase.getInstance().getReference("lobbies").child(pin).child("players").child(playerId);
+        ref.removeValue().addOnCompleteListener(task -> {
+            if (onComplete != null) onComplete.run();
+        });
+    }
     @Override
     public void createLobby(
         String nickname,

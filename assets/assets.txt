@@ -6,6 +6,7 @@ backgroundlogo.png
 backgroundx.png
 block.png
 bronzebutton.png
+cancel.png
 cinzel.ttf
 cinzel_bold.ttf
 colosseum.png
