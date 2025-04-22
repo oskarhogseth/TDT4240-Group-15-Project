@@ -24,6 +24,7 @@ howtoplay.png
 info_button.png
 joingame.png
 joingame1.png
+leaderboard.png
 leave.png
 leavegame.png
 mute.png
