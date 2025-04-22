@@ -15,7 +15,9 @@ public class GameSession {
     private List<String> guessedWords;
 
     private int currentRound;
-    private int totalRounds;
+    private int totalRounds = 5; //default
+
+    private String selectedDifficulty = "NORMAL"; // default fallback
 
     public GameSession() {
         this.lobby           = new GameLobby();
@@ -23,7 +25,7 @@ public class GameSession {
         this.activeSortedKey = "";
         this.guessedWords    = new ArrayList<>();
         this.currentRound    = 1;
-        this.totalRounds     = 5;
+        this.selectedDifficulty = "NORMAL";
         this.gameController  = new GameController(this);
     }
 
@@ -31,26 +33,25 @@ public class GameSession {
     public String getCurrentLetters() {
         return currentLetters;
     }
-
     public void setCurrentLetters(String letters) {
         this.currentLetters = letters;
     }
 
-    public Player getLocalPlayer() {
-        return localPlayer;
-    }
-
-    public void setLocalPlayer(Player player) {
-        this.localPlayer = player;
-    }
-
-    // Active Sorted Key
     public String getActiveSortedKey() {
         return activeSortedKey;
     }
 
     public void setActiveSortedKey(String key) {
         this.activeSortedKey = key;
+    }
+
+    // Player
+    public Player getLocalPlayer() {
+        return localPlayer;
+    }
+
+    public void setLocalPlayer(Player player) {
+        this.localPlayer = player;
     }
 
     // Guessed Words
@@ -79,9 +80,15 @@ public class GameSession {
     public int getCurrentRound() {
         return currentRound;
     }
+
     public int getTotalRounds() {
         return totalRounds;
     }
+
+    public void setTotalRounds(int rounds) {
+        this.totalRounds = rounds;
+    }
+
     public void nextRound() {
         if (currentRound < totalRounds) {
             currentRound++;
@@ -92,11 +99,17 @@ public class GameSession {
     public void resetGame() {
         this.currentRound = 1;
         this.guessedWords.clear();
-        // Reset player scores
         for (Player p : lobby.getPlayers()) {
             p.resetScore();
         }
-        // Optionally, regenerate the first round letters now or later
-        // gameController.generateLetters();
+    }
+
+    // Difficulty (NEW)
+    public String getSelectedDifficulty() {
+        return selectedDifficulty;
+    }
+
+    public void setSelectedDifficulty(String difficulty) {
+        this.selectedDifficulty = difficulty;
     }
 }

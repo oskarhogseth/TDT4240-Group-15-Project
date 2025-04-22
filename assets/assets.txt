@@ -34,6 +34,7 @@ normalyellow.png
 playagain.png
 redbutton.png
 scoreboard.png
+seeresults.png
 settings.png
 sevenbronze.png
 sevenyellow.png
