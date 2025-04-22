@@ -52,7 +52,7 @@ public class GameView extends ScreenAdapter {
     private List<TextButton> letterButtons = new ArrayList<>();
     private StringBuilder currentWord = new StringBuilder();
 
-    private float timeLeft = 10f;
+    private float timeLeft = 30f;
     private boolean timerEnded = false;
 
     public GameView(Launcher game, GameSession session, Player player) {
@@ -60,7 +60,7 @@ public class GameView extends ScreenAdapter {
         this.session = session;
         this.player = player;
 
-        stage = new Stage(new FitViewport(480, 800));
+        stage = new Stage(new FitViewport(1080, 2400));
         Gdx.input.setInputProcessor(stage);
         batch = new SpriteBatch();
 
