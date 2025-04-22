@@ -12,6 +12,7 @@ cinzel_bold.ttf
 colosseum.png
 creategame.png
 createnewgame.png
+endgame.png
 enternickname.png
 enterword.png
 fivebronze.png
