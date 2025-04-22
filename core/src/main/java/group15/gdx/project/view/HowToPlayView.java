@@ -70,8 +70,8 @@ public class HowToPlayView extends ScreenAdapter {
 
         // Logo
         Image logo = new Image(logoTexture);
-        logo.setSize(sw * 0.8f, sh * 0.1f);
-        root.add(logo).padTop(100).padBottom(80).center();
+        logo.setSize(sw * 0.8f, sh * 0.2f);
+        root.add(logo).colspan(2).padTop(150).padBottom(80).center();
         root.row();
 
         // Instructions
@@ -86,7 +86,7 @@ public class HowToPlayView extends ScreenAdapter {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new LobbyView(game, session, controller));
+                game.setScreen(new LogInView(game, session, controller));
             }
         });
         root.add(backButton).size(400, 140).padBottom(50);
