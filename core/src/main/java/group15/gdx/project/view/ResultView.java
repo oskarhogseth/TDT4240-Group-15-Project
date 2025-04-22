@@ -2,6 +2,7 @@ package group15.gdx.project.view;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -10,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -20,6 +22,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
+import group15.gdx.project.model.LetterSet;
 import group15.gdx.project.model.Player;
 import group15.gdx.project.model.Score;
 
@@ -84,13 +87,24 @@ public class ResultView extends ScreenAdapter {
             root.row();
         }
 
-// back button
+        // back button
         TextButton backButton = new TextButton(BACK_TO_LOBBY, skin);
         backButton.getLabel().setFontScale(baseFont / 22f);
-        backButton.addListener(event -> {
-            if (!backButton.isPressed()) return false;
-            game.setScreen(new LobbyView(game, session, controller)); // Reuse same controller
-            return true;
+        backButton.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                String pin = session.getLobby().getPin();
+                controller.resetLobby(pin,
+                    // onSuccess: just drop back into LobbyView
+                    () -> Gdx.app.postRunnable(() ->
+                        game.setScreen(new LobbyView(game, session, controller))
+                    ),
+                    // onFailure: show error
+                    () -> Gdx.app.postRunnable(() ->
+                        showAlert("Failed to reset lobby, please try again")
+                    )
+                );
+            }
         });
 
         // play again button
@@ -98,8 +112,23 @@ public class ResultView extends ScreenAdapter {
         playAgain.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                session.getGameController().generateLetters();
-                game.setScreen(new LobbyView(game, session, controller));
+                String pin = session.getLobby().getPin();
+
+                controller.resetLobby(pin,
+                    // onSuccess:
+                    () -> Gdx.app.postRunnable(() -> {
+                        session.resetGame();
+                        LetterSet set = session.getGameController().generateLetters();
+                        controller.startGame(pin, set);
+                        game.setScreen(
+                            new GameView(game, session, session.getLocalPlayer())
+                        );
+                    }),
+                    // onFailure:
+                    () -> Gdx.app.postRunnable(() ->
+                        showAlert("Could not restart game, please try again")
+                    )
+                );
             }
         });
 
@@ -140,5 +169,27 @@ public class ResultView extends ScreenAdapter {
         backgroundTexture.dispose();
         playAgainTexture.dispose();
         cinzelFont.dispose();
+    }
+
+    private void showAlert(String message) {
+        Dialog dialog = new Dialog("Error", skin);
+        Label.LabelStyle style = new Label.LabelStyle(cinzelFont, Color.BLACK);
+        Label msg = new Label(message, style);
+        msg.setWrap(true);
+
+        dialog.getContentTable()
+            .pad(20)
+            .add(msg)
+            .width(stage.getViewport().getWorldWidth() * 0.8f)
+            .row();
+
+        dialog.button("OK", true).padTop(10);
+        dialog.pack();
+        dialog.show(stage);
+
+        // Optional: reposition so it isn't flush at the very top
+        float x = (stage.getViewport().getWorldWidth()  - dialog.getWidth())  / 2f;
+        float y = (stage.getViewport().getWorldHeight() - dialog.getHeight()) / 2f;
+        dialog.setPosition(x, y);
     }
 }

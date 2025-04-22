@@ -34,5 +34,7 @@ public interface LobbyServiceInterface {
     );
 
     void listenToLobby(String pin, PlayerUpdateCallback callback);
+
+    void resetLobby(String pin, Runnable onSuccess, Runnable onFail);
     void startGame(String pin);
 }

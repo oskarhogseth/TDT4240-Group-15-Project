@@ -116,6 +116,15 @@ public class AndroidLobbyService implements LobbyServiceInterface {
     }
 
     @Override
+    public void resetLobby(String pin, Runnable onSuccess, Runnable onFail) {
+        db.collection("lobbies")
+            .document(pin)
+            .update("isStarted", false)
+            .addOnSuccessListener(unused -> onSuccess.run())
+            .addOnFailureListener(e -> onFail.run());
+    }
+
+    @Override
     public void startGame(String pin) {
         db.collection("lobbies")
             .document(pin)

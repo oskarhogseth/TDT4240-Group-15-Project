@@ -2,6 +2,7 @@ package group15.gdx.project.view;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -189,13 +190,22 @@ public class LobbyView extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
+        // 1) Wipe the screen to your lobby’s background color
+        Gdx.gl.glClearColor(0.95f, 0.90f, 0.80f, 1f); // adjust to your exact beige
+        Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
+
+        // 2) Draw your background quad
         batch.setProjectionMatrix(stage.getCamera().combined);
         batch.begin();
-        batch.draw(backgroundTexture, 0, 0,
-                stage.getViewport().getWorldWidth(),
-                stage.getViewport().getWorldHeight());
+        batch.draw(
+            backgroundTexture,
+            0, 0,
+            stage.getViewport().getWorldWidth(),
+            stage.getViewport().getWorldHeight()
+        );
         batch.end();
 
+        // 3) Lay on your UI
         stage.act(delta);
         stage.draw();
     }

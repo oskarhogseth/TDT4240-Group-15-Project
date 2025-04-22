@@ -180,24 +180,43 @@ public class GameView extends ScreenAdapter {
         nextRoundButton = new ImageButton(nextImage.getDrawable());
         nextRoundButton.setVisible(false);
         nextRoundButton.setDisabled(true);
+
         nextRoundButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
+                // If there are more rounds left…
                 if (session.getCurrentRound() < session.getTotalRounds()) {
-                    // Advance to the next round and update the display.
+                    // Advance session round
                     session.nextRound();
+                    // Generate the new letters
                     session.getGameController().generateLetters();
-                    // Reset timer and re-enable it
-                    timeLeft = 10; // Timer
+
+                    // Reset and restart timer
+                    timeLeft   = 20f;
                     timerEnded = false;
-                    updateRoundDisplay();  // Update the round display label.
+
+                    // Update the UI for round number and letters
+                    updateRoundDisplay();
                     buildPyramid(session.getCurrentLetters().toCharArray());
+
+                    // Clear the current word and re‑enable entry
+                    resetWord();
+                    enterButton.setDisabled(false);
+
+                    for (TextButton btn : letterButtons) {
+                        btn.setDisabled(false);
+                        btn.setColor(1f, 1f, 1f, 1f);
+                    }
+
+                    nextRoundButton.setVisible(false);
+                    nextRoundButton.setDisabled(true);
+
                     System.out.println("Round " + session.getCurrentRound() + " begins.");
+
                 } else {
+                    // No more rounds → go to results
                     game.setScreen(new ResultView(game, session, game.getLobbyController()));
                 }
-                resetWord();
-                enterButton.setDisabled(false);
             }
         });
         rootTable.add(nextRoundButton).width(180).height(70).colspan(3).center();

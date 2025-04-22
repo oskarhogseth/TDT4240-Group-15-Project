@@ -34,4 +34,8 @@ public class LobbyController {
     public void startGame(String pin, LetterSet letters) {
         service.startGame(pin, letters);
     }
+
+    public void resetLobby(String pin, Runnable onSuccess, Runnable onFail) {
+        service.resetLobby(pin, onSuccess, onFail);
+    }
 }
