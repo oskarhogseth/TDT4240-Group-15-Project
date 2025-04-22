@@ -11,6 +11,7 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+
 import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
@@ -18,7 +19,7 @@ import group15.gdx.project.model.GameSession;
 public class HowToPlayView extends ScreenAdapter {
 
     private final Launcher game;
-    private final GameSession session;
+    private final GameSession gameSession;
     private final LobbyController controller;
 
     private Stage stage;
@@ -35,7 +36,7 @@ public class HowToPlayView extends ScreenAdapter {
 
     public HowToPlayView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
-        this.session = session;
+        this.gameSession = session;
         this.controller = controller;
 
         stage = new Stage(new FitViewport(1080, 2400));
@@ -104,7 +105,7 @@ public class HowToPlayView extends ScreenAdapter {
         backButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new LogInView(game, session, controller));
+                game.setScreen(new LogInView(game, gameSession, controller));
             }
         });
 
