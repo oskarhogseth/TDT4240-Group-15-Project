@@ -15,6 +15,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.CreateGameControllerInterface;
+import group15.gdx.project.controller.GameController;
+import group15.gdx.project.controller.LeaderboardController;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
 
@@ -37,6 +39,8 @@ public class CreateGameView extends ScreenAdapter {
     private Texture muteTexture;
     private ImageButton volumeButton;
     private Label errorLabel;
+    private final GameController gameController;
+    private final LeaderboardController leaderboardController;
 
     private Texture threeBronze, fiveBronze, sevenBronze;
     private Texture threeYellow, fiveYellow, sevenYellow;
@@ -59,10 +63,12 @@ public class CreateGameView extends ScreenAdapter {
 
     private Skin uiSkin = new Skin(Gdx.files.internal("vhs.json"));
 
-    public CreateGameView(Launcher game, GameSession session, LobbyController controller) {
+    public CreateGameView(Launcher game, GameSession session, LobbyController controller, LeaderboardController leaderboardController, GameController gameController) {
         this.game = game;
         this.session = session;
         this.controller = controller;
+        this.leaderboardController = leaderboardController;
+        this.gameController = gameController;
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -199,14 +205,14 @@ public class CreateGameView extends ScreenAdapter {
                         nickname,
                         Integer.parseInt(selectedRounds),
                         selectedDifficulty.toUpperCase(),
-                        () -> Gdx.app.postRunnable(() -> game.setScreen(new LobbyView(game, session, (LobbyController) controller))),
+                        () -> Gdx.app.postRunnable(() -> game.setScreen(new LobbyView(game, session, controller, gameController, leaderboardController))),
                         () -> Gdx.app.postRunnable(() -> showAlert("Lobby creation failed. Try again."))
                 );
             }
         }
 
         if (backButtonRect.contains(touch)) {
-            game.setScreen(new LogInView(game, session, controller));
+            game.setScreen(new LogInView(game, session, controller, gameController, leaderboardController));
         }
     }
 

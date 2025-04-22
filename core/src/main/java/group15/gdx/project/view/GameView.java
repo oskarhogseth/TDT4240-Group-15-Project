@@ -14,6 +14,9 @@ import group15.gdx.project.Launcher;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.LetterSet;
 import group15.gdx.project.model.Player;
+import group15.gdx.project.controller.GameController;
+import group15.gdx.project.controller.LeaderboardController;
+import group15.gdx.project.controller.LobbyController;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -40,12 +43,17 @@ public class GameView extends ScreenAdapter {
 
     private float timeLeft;
     private boolean timerEnded = false;
+    private final LobbyController lobbyController;
+    private final LeaderboardController leaderboardController;
+    private final GameController gameController;
 
-    public GameView(Launcher game, GameSession session, Player player) {
+    public GameView(Launcher game, GameSession session, Player player, LobbyController lobbyController, LeaderboardController leaderboardController, GameController gameController) {
         this.game = game;
         this.session = session;
         this.player = player;
-
+        this.lobbyController = lobbyController;
+        this.leaderboardController = leaderboardController;
+        this.gameController = gameController;
         stage = new Stage(new FitViewport(1080, 2400));
         Gdx.input.setInputProcessor(stage);
         batch = new SpriteBatch();
@@ -176,7 +184,7 @@ public class GameView extends ScreenAdapter {
                     nextRoundButton.setVisible(false);
                     nextRoundButton.setDisabled(true);
                 } else {
-                    game.setScreen(new ResultView(game, session, game.getLobbyController()));
+                    game.setScreen(new ResultView(game, session, lobbyController, gameController, leaderboardController));
                 }
             }
         });
@@ -249,7 +257,7 @@ public class GameView extends ScreenAdapter {
 
                 game.getLobbyController().leaveGame(pin, playerId, () -> {
                     Gdx.app.postRunnable(() ->
-                            game.setScreen(new LogInView(game, session, game.getLobbyController()))
+                            game.setScreen(new LogInView(game, session, lobbyController, gameController, leaderboardController))
                     );
                 });
             }
@@ -323,7 +331,7 @@ public class GameView extends ScreenAdapter {
 
                 if (session.getCurrentRound() == session.getTotalRounds()) {
                     nextRoundButton.getImage().setDrawable(
-                            new TextureRegionDrawable(new TextureRegion(new Texture("viewresults.png"))));
+                            new TextureRegionDrawable(new TextureRegion(new Texture("seeresults.png"))));
                 }
             }
         }

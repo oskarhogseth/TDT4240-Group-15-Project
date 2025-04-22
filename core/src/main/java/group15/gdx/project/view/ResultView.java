@@ -10,6 +10,8 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.*;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.GameController;
+import group15.gdx.project.controller.LeaderboardController;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.LetterSet;
@@ -25,6 +27,8 @@ public class ResultView extends ScreenAdapter {
     private final Launcher game;
     private final GameSession session;
     private final LobbyController controller;
+    private final GameController gameController;
+    private final LeaderboardController leaderboardController;
 
     private Stage stage;
     private SpriteBatch batch;
@@ -34,10 +38,12 @@ public class ResultView extends ScreenAdapter {
     private ImageButton volumeButton;
     private BitmapFont font, boldFont;
 
-    public ResultView(Launcher game, GameSession session, LobbyController controller) {
+    public ResultView(Launcher game, GameSession session, LobbyController controller, GameController gameController, LeaderboardController leaderboardController) {
         this.game = game;
         this.session = session;
         this.controller = controller;
+        this.gameController = gameController;
+        this.leaderboardController = leaderboardController;
 
         stage = new Stage(new FitViewport(1080, 2400));
         Gdx.input.setInputProcessor(stage);
@@ -103,7 +109,7 @@ public class ResultView extends ScreenAdapter {
                             session.resetGame();
                             LetterSet set = session.getGameController().generateLetters();
                             controller.startGame(pin, set);
-                            game.setScreen(new GameView(game, session, session.getLocalPlayer()));
+                            game.setScreen(new GameView(game, session, session.getLocalPlayer(), controller, leaderboardController, gameController));
                         }),
                         () -> Gdx.app.postRunnable(() -> showAlert("Could not restart game, please try again"))
                 );
@@ -115,7 +121,7 @@ public class ResultView extends ScreenAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 controller.resetLobby(session.getLobby().getPin(),
-                        () -> Gdx.app.postRunnable(() -> game.setScreen(new LobbyView(game, session, controller))),
+                        () -> Gdx.app.postRunnable(() -> game.setScreen(new LobbyView(game, session, controller, gameController, leaderboardController))),
                         () -> Gdx.app.postRunnable(() -> showAlert("Failed to reset lobby, please try again"))
                 );
             }

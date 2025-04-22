@@ -10,15 +10,21 @@ import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.controller.LobbyServiceInterface;
 import group15.gdx.project.midi.GameSong;
 import group15.gdx.project.model.GameSession;
-import group15.gdx.project.view.Leaderboard;
+import group15.gdx.project.view.LeaderboardView;
 import group15.gdx.project.view.LogInView;
+import group15.gdx.project.controller.GameController;
+import group15.gdx.project.controller.LeaderboardController;
+import group15.gdx.project.controller.LobbyController;
 
 public class Launcher extends Game implements GestureListener {
 
     private GameSession session;
-    private Leaderboard leaderboard;
+    private LeaderboardView leaderboard;
     private LobbyServiceInterface lobbyService;
-    private LobbyController controller;
+    private LobbyController lobbyController;
+    private LeaderboardController leaderboardController;
+
+    private GameController gameController;
     private GameSong gameSong;
 
     private boolean isMuted = false;
@@ -34,7 +40,7 @@ public class Launcher extends Game implements GestureListener {
     }
 
     public LobbyController getLobbyController() {
-        return controller;
+        return lobbyController;
     }
 
     public boolean isMuted() {
@@ -59,13 +65,13 @@ public class Launcher extends Game implements GestureListener {
     @Override
     public void create() {
         session = new GameSession();
-        controller = new LobbyController(lobbyService, session);
+        lobbyController = new LobbyController(lobbyService, session);
         gameSong = new GameSong();
         gameSong.play(); // Start music at launch
 
         Gdx.input.setInputProcessor(new GestureDetector(this));
 
-        setScreen(new LogInView(this, session, controller));
+        setScreen(new LogInView(this, session, lobbyController, gameController, leaderboardController));
     }
 
     // Gesture methods

@@ -19,6 +19,8 @@ import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.GameController;
+import group15.gdx.project.controller.LeaderboardController;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.controller.LobbyServiceInterface;
 import group15.gdx.project.model.GameSession;
@@ -43,16 +45,20 @@ public class LobbyView extends ScreenAdapter {
     private Texture startGameTexture;
     private Texture leaveGameTexture;
     private Texture endGameTexture;
+    private final GameController gameController;
+    private final LeaderboardController leaderboardController;
 
     private BitmapFont cinzelFont;
 
     private static final String WELCOME_MESSAGE = "Welcome to the Lobby!";
     private static final String PLAYERS_IN_LOBBY = "Players in lobby:";
 
-    public LobbyView(Launcher game, GameSession session, LobbyController controller) {
+    public LobbyView(Launcher game, GameSession session, LobbyController controller, GameController gameController, LeaderboardController leaderboardController) {
         this.game = game;
         this.session = session;
         this.controller = controller;
+        this.gameController = gameController;
+        this.leaderboardController = leaderboardController;
 
         stage = new Stage(new FitViewport(1080, 2400));
         Gdx.input.setInputProcessor(stage);
@@ -128,7 +134,7 @@ public class LobbyView extends ScreenAdapter {
                 public void clicked(InputEvent ev, float x, float y) {
                     controller.leaveGame(session.getLobby().getPin(), session.getLocalPlayer().getId(), () -> {
                         Gdx.app.postRunnable(() ->
-                                game.setScreen(new LogInView(game, session, controller)));
+                                game.setScreen(new LogInView(game, session, controller, gameController, leaderboardController)));
                     });
                 }
             });
@@ -142,7 +148,7 @@ public class LobbyView extends ScreenAdapter {
                 public void clicked(InputEvent ev, float x, float y) {
                     controller.leaveGame(session.getLobby().getPin(), session.getLocalPlayer().getId(), () -> {
                         Gdx.app.postRunnable(() ->
-                                game.setScreen(new LogInView(game, session, controller)));
+                                game.setScreen(new LogInView(game, session, controller, gameController, leaderboardController)));
                     });
                 }
             });
@@ -164,7 +170,7 @@ public class LobbyView extends ScreenAdapter {
             public void onGameStarted(LetterSet set) {
                 session.getGameController().loadLetters(set);
                 Gdx.app.postRunnable(() ->
-                        game.setScreen(new GameView(game, session, session.getLocalPlayer())));
+                        game.setScreen(new GameView(game, session, session.getLocalPlayer(), controller, leaderboardController, gameController)));
             }
         });
     }

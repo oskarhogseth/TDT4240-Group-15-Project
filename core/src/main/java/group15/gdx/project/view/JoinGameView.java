@@ -18,6 +18,9 @@ import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.controller.LobbyServiceInterface;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Player;
+import group15.gdx.project.controller.GameController;
+import group15.gdx.project.controller.LeaderboardController;
+import group15.gdx.project.controller.LobbyController;
 
 import java.util.Map;
 
@@ -50,10 +53,15 @@ public class JoinGameView extends ScreenAdapter {
 
     private Label errorLabel;
 
-    public JoinGameView(Launcher game, GameSession session, LobbyController controller) {
+    private final GameController gameController;
+    private final LeaderboardController leaderboardController;
+
+    public JoinGameView(Launcher game, GameSession session, LobbyController controller, LeaderboardController leaderboardController, GameController gameController) {
         this.game = game;
         this.session = session;
         this.controller = controller;
+        this.leaderboardController = leaderboardController;
+        this.gameController = gameController;
 
         stage = new Stage(new ScreenViewport());
         Gdx.input.setInputProcessor(stage);
@@ -168,7 +176,7 @@ public class JoinGameView extends ScreenAdapter {
                     Gdx.app.postRunnable(() -> {
                         session.getLobby().setPin(pin);
                         session.getLobby().updatePlayersFromMap(Map.of(player.getId(), player.getNickname()));
-                        game.setScreen(new LobbyView(game, session, controller));
+                        game.setScreen(new LobbyView(game, session, controller, gameController, leaderboardController));
                     });
                 }
 
@@ -180,7 +188,7 @@ public class JoinGameView extends ScreenAdapter {
         }
 
         if (backButtonRect.contains(touch)) {
-            game.setScreen(new LogInView(game, session, controller));
+            game.setScreen(new LogInView(game, session, controller, gameController, leaderboardController));
         }
     }
 

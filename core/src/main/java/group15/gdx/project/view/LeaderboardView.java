@@ -15,12 +15,17 @@ import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LeaderboardController;
 import group15.gdx.project.model.GameSession;
 import group15.gdx.project.model.Score;
+import group15.gdx.project.controller.GameController;
+import group15.gdx.project.controller.LeaderboardController;
+import group15.gdx.project.controller.LobbyController;
 
 public class LeaderboardView extends ScreenAdapter {
 
     private final Launcher game;
     private final GameSession session;
     private final LeaderboardController controller;
+    private final LobbyController lobbyController;
+    private final GameController gameController;
 
     private final Stage stage;
     private final SpriteBatch batch;
@@ -31,10 +36,12 @@ public class LeaderboardView extends ScreenAdapter {
     private Texture backgroundTexture, logoTexture, volumeTexture, muteTexture, backButtonTexture;
     private ImageButton volumeButton;
 
-    public LeaderboardView(Launcher game, GameSession session, LeaderboardController controller) {
+    public LeaderboardView(Launcher game, GameSession session, LeaderboardController controller, LobbyController lobbyController, GameController gameController) {
         this.game = game;
         this.session = session;
         this.controller = controller;
+        this.gameController = gameController;
+        this.lobbyController = lobbyController;
 
         stage = new Stage(new ScreenViewport());
         batch = new SpriteBatch();
@@ -80,7 +87,7 @@ public class LeaderboardView extends ScreenAdapter {
         ImageButton backButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(backButtonTexture)));
         backButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new LogInView(game, session, game.getLobbyController()));
+                game.setScreen(new LogInView(game, session, lobbyController, gameController, controller));
             }
         });
         root.add(backButton).size(300, 100).padTop(50);

@@ -10,15 +10,25 @@ import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.GameController;
+import group15.gdx.project.controller.LeaderboardController;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
+import group15.gdx.project.model.LeaderboardModel;
+import group15.gdx.project.view.LeaderboardView;
+import group15.gdx.project.view.CreateGameView;
+import group15.gdx.project.view.JoinGameView;
+import group15.gdx.project.view.HowToPlayView;
 
 public class LogInView extends ScreenAdapter {
 
     private final Launcher game;
     private final GameSession session;
     private final LobbyController controller;
+    private final GameController gameController;
+    private final LeaderboardController leaderboardController;
 
     private Stage stage;
     private SpriteBatch batch;
@@ -35,10 +45,12 @@ public class LogInView extends ScreenAdapter {
     private Texture muteTexture;
     private ImageButton volumeButton;
 
-    public LogInView(Launcher game, GameSession session, LobbyController controller) {
+    public LogInView(Launcher game, GameSession session, LobbyController controller, GameController gameController, LeaderboardController leaderboardController) {
         this.game = game;
         this.session = session;
         this.controller = controller;
+        this.gameController = gameController;
+        this.leaderboardController = leaderboardController;
 
         stage = new Stage(new FitViewport(1080, 2400));
         Gdx.input.setInputProcessor(stage);
@@ -66,36 +78,33 @@ public class LogInView extends ScreenAdapter {
 
         Table root = new Table();
         root.setFillParent(true);
-        root.bottom().padBottom(screenHeight * 0.07f); // Move buttons up slightly
+        root.bottom().padBottom(screenHeight * 0.07f);
         stage.addActor(root);
 
-        // Logo
         Image logo = new Image(logoTexture);
         logo.setSize(screenWidth * 0.8f, screenHeight * 0.2f);
-        root.add(logo).colspan(2).padTop(100).padBottom(50).center(); // was 150/80
+        root.add(logo).colspan(2).padTop(100).padBottom(50).center();
         root.row();
 
-        // Buttons column
         Table buttonCol = new Table();
         float spacing = 80f;
 
-        buttonCol.add(makeMenuButton(createTexture, () -> game.setScreen(new CreateGameView(game, session, controller))))
+        buttonCol.add(makeMenuButton(createTexture, () -> game.setScreen(new CreateGameView(game, session, controller, leaderboardController, gameController))))
                 .padBottom(spacing);
         buttonCol.row();
 
-        buttonCol.add(makeMenuButton(joinTexture, () -> game.setScreen(new JoinGameView(game, session, controller))))
+        buttonCol.add(makeMenuButton(joinTexture, () -> game.setScreen(new JoinGameView(game, session, controller, leaderboardController, gameController))))
                 .padBottom(spacing);
         buttonCol.row();
 
-        buttonCol.add(makeMenuButton(leaderboardTexture, () -> game.setScreen(new Leaderboard(game, session))))
+        buttonCol.add(makeMenuButton(leaderboardTexture, () -> game.setScreen(new LeaderboardView(game, session, leaderboardController, controller, gameController))))
                 .padBottom(spacing);
         buttonCol.row();
 
-        buttonCol.add(makeMenuButton(howToPlayTexture, () -> game.setScreen(new HowToPlayView(game, session, controller))));
+        buttonCol.add(makeMenuButton(howToPlayTexture, () -> game.setScreen(new HowToPlayView(game, session, controller, gameController, leaderboardController))));
 
         root.add(buttonCol).center().expand();
 
-        // Volume toggle icon (top-right)
         TextureRegionDrawable iconDrawable = new TextureRegionDrawable(
                 new TextureRegion(game.isMuted() ? muteTexture : volumeTexture));
         volumeButton = new ImageButton(iconDrawable);
