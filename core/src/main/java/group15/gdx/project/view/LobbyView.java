@@ -158,9 +158,9 @@ public class LobbyView extends ScreenAdapter {
             public void onPlayersUpdated(Map<String, String> players) {
                 session.getLobby().updatePlayersFromMap(players);
 
-                String myUid = session.getLocalPlayer().getUid();
+                String myName = session.getLocalPlayer().getNickname();
                 for (Player p : session.getLobby().getPlayers()) {
-                    if (p.getUid().equals(myUid)) {
+                    if (p.getNickname().equals(myName)) {
                         session.setLocalPlayer(p);
                         break;
                     }
