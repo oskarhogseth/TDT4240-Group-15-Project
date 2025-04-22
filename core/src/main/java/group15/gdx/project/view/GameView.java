@@ -239,6 +239,7 @@ public class GameView extends ScreenAdapter {
         Label msgLabel = new Label("Are you sure you want to leave the game?", labelStyle);
         msgLabel.setWrap(true);
         msgLabel.setAlignment(Align.center);
+        msgLabel.setFontScale(1.5f);
         dialog.add(msgLabel).width(700).padTop(60).colspan(2).center();
         dialog.row();
 
@@ -267,8 +268,8 @@ public class GameView extends ScreenAdapter {
             }
         });
 
-        dialog.add(leaveBtn).size(240, 120).padTop(60).padRight(40);
-        dialog.add(cancelBtn).size(240, 120).padTop(60);
+        dialog.add(leaveBtn).size(350, 120).padTop(60).padRight(40);
+        dialog.add(cancelBtn).size(350, 120).padTop(60);
         dialog.setPosition(
                 (stage.getViewport().getWorldWidth() - dialog.getWidth()) / 2f,
                 (stage.getViewport().getWorldHeight() - dialog.getHeight()) / 2f
