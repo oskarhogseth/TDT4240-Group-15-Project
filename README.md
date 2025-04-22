@@ -73,4 +73,7 @@
 - **Letter Tiles**: Tap to form words (3+ letters).  
 - **Submit**: Press the submit button to validate words.  
 - **Score**: Earn points for valid words; no penalties for invalid guesses.  
-- **Leaderboard**: View rankings after finishing all rounds.  
+- **Leaderboard**: View rankings after finishing all rounds.
+
+## Additional notes
+In the branch 73-improve-mvc you will find the code organized in MVC architectural pattern. This branch has a few bugs regarding the Leaderboard-functionality, and due to lack of time it is therefore not merged into the final Master branch. We leave this note to show knowledge and understanding about the MVC principles.
