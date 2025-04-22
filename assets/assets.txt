@@ -6,6 +6,7 @@ backgroundlogo.png
 backgroundx.png
 block.png
 bronzebutton.png
+cancel.png
 cinzel.ttf
 cinzel_bold.ttf
 colosseum.png
@@ -34,6 +35,7 @@ normalyellow.png
 playagain.png
 redbutton.png
 scoreboard.png
+seeresults.png
 settings.png
 sevenbronze.png
 sevenyellow.png

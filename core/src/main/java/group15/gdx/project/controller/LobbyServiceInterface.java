@@ -19,6 +19,8 @@ public interface LobbyServiceInterface {
     }
 
     void startGame(String pin, LetterSet letters);
+    void leaveGame(String pin, String playerId, Runnable onComplete);
+
 
     void createLobby(
         String nickname,

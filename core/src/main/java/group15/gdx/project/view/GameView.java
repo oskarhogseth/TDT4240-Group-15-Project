@@ -10,28 +10,22 @@ import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
-import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.Image;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
-import com.badlogic.gdx.scenes.scene2d.ui.Label;
-import com.badlogic.gdx.scenes.scene2d.ui.Skin;
-import com.badlogic.gdx.scenes.scene2d.ui.Table;
-import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
+import com.badlogic.gdx.scenes.scene2d.*;
+import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
-
 import group15.gdx.project.Launcher;
 import group15.gdx.project.model.GameSession;
+import group15.gdx.project.model.LetterSet;
 import group15.gdx.project.model.Player;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class GameView extends ScreenAdapter {
+
     private final Launcher game;
     private final GameSession session;
     private final Player player;
@@ -42,6 +36,7 @@ public class GameView extends ScreenAdapter {
     private BitmapFont cinzelFont;
 
     private Texture backgroundTexture, blockTexture, enterTexture, nextRoundTexture;
+    private Texture leaveTexture, cancelTexture;
 
     private Table rootTable;
     private Table pyramidContainer;
@@ -52,7 +47,7 @@ public class GameView extends ScreenAdapter {
     private List<TextButton> letterButtons = new ArrayList<>();
     private StringBuilder currentWord = new StringBuilder();
 
-    private float timeLeft = 30f;
+    private float timeLeft;
     private boolean timerEnded = false;
 
     public GameView(Launcher game, GameSession session, Player player) {
@@ -68,61 +63,62 @@ public class GameView extends ScreenAdapter {
         blockTexture = new Texture("block.png");
         enterTexture = new Texture("enterword.png");
         nextRoundTexture = new Texture("nextround.png");
+        leaveTexture = new Texture("leavegame.png");
+        cancelTexture = new Texture("cancel.png");
 
         skin = new Skin(Gdx.files.internal("vhs.json"));
         cinzelFont = loadCinzelFont(32);
         skin.get(Label.LabelStyle.class).font = cinzelFont;
         skin.get(TextButton.TextButtonStyle.class).font = cinzelFont;
 
+        timeLeft = getRoundTime();
+
         setupUI();
+    }
+
+    private float getRoundTime() {
+        String diff = session.getSelectedDifficulty();
+        return "HARD".equalsIgnoreCase(diff) ? 15f : 30f;
     }
 
     private void setupUI() {
         float screenWidth = stage.getViewport().getWorldWidth();
         float screenHeight = stage.getViewport().getWorldHeight();
-        float baseFont = screenHeight / 40f; // Relative font size
+        float baseFont = screenHeight / 40f;
 
         rootTable = new Table();
         rootTable.setFillParent(true);
         rootTable.top().padTop(20);
         stage.addActor(rootTable);
 
-        // Timer section
         Table timerSection = new Table();
         timerSection.top().padLeft(60);
 
-        // Close button (X) - top right
         TextButton closeButton = new TextButton("X", skin);
         closeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new ResultView(game, session, game.getLobbyController()));
+                showLeaveConfirmation();
             }
         });
 
-        // Timer
-        timerLabel = new Label("Time: 60s", skin);
+        timerLabel = new Label("Time: " + (int) timeLeft + "s", skin);
         timerLabel.setFontScale(1.3f);
-
         timerSection.add(timerLabel).expandX();
         timerSection.add(closeButton).size(40, 40).padRight(20);
         rootTable.add(timerSection).width(screenWidth).height(screenHeight * 0.1f);
         rootTable.row();
 
-        // Points display
-        //Add real time points on the x
         pointsLabel = new Label("YOU HAVE " + player.getScore() + " POINTS", skin);
         pointsLabel.setFontScale(baseFont / 20f);
         rootTable.add(pointsLabel).padTop(10).padBottom(10);
         rootTable.row();
 
-        // Round display
         roundLabel = new Label("Round " + session.getCurrentRound() + " of " + session.getTotalRounds(), skin);
         roundLabel.setFontScale(baseFont / 20f);
         rootTable.add(roundLabel).padBottom(10);
         rootTable.row();
 
-        // Word field
         Table wordBox = new Table();
         wordBox.setBackground(createSolidColorDrawable(1, 1, 1, 0.9f));
         wordLabel = new Label("", skin);
@@ -132,33 +128,27 @@ public class GameView extends ScreenAdapter {
         rootTable.add(wordBox).width(300).height(60).colspan(3).center();
         rootTable.row();
 
-        // Feedback
         feedbackLabel = new Label("", skin);
         feedbackLabel.setFontScale(1.2f);
         rootTable.add(feedbackLabel).colspan(3).center().padBottom(20);
         rootTable.row();
 
-        // Letter pyramid
         pyramidContainer = new Table();
         rootTable.add(pyramidContainer).colspan(3).padBottom(10).center();
         rootTable.row();
 
         buildPyramid(session.getCurrentLetters().toCharArray());
 
-        // Enter word button
         Image enterImage = new Image(enterTexture);
         enterButton = new ImageButton(enterImage.getDrawable());
         enterButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                if (((ImageButton) event.getListenerActor()).isDisabled()) return;
-
+            @Override public void clicked(InputEvent event, float x, float y) {
+                if (enterButton.isDisabled()) return;
                 String word = currentWord.toString().trim();
                 if (word.isEmpty()) {
                     feedbackLabel.setText("No word entered.");
                     return;
                 }
-                // Check if the word was already guessed.
                 if (session.getGuessedWords().contains(word.toLowerCase())) {
                     feedbackLabel.setText("Word already guessed!");
                     resetWord();
@@ -166,40 +156,31 @@ public class GameView extends ScreenAdapter {
                 }
                 boolean valid = session.getGameController().submitWord(player.getName(), word);
                 feedbackLabel.setText(valid ? "Word accepted!" : "Invalid word!");
-                if (valid) {
-                    updateScore();
-                }
+                if (valid) updateScore();
                 resetWord();
             }
         });
         rootTable.add(enterButton).width(180).height(40).colspan(3).center();
         rootTable.row();
 
-        // Next round button
         Image nextImage = new Image(nextRoundTexture);
         nextRoundButton = new ImageButton(nextImage.getDrawable());
         nextRoundButton.setVisible(false);
         nextRoundButton.setDisabled(true);
 
         nextRoundButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                // If there are more rounds left…
+            @Override public void clicked(InputEvent event, float x, float y) {
                 if (session.getCurrentRound() < session.getTotalRounds()) {
-                    // Advance session round
                     session.nextRound();
-                    // Generate the new letters
-                    session.getGameController().generateLetters();
+                    LetterSet newSet = session.getGameController().generateLetters();
+                    session.getLobby().setCurrentLetterSet(newSet);
 
-                    // Reset and restart timer
-                    timeLeft   = 20f;
+                    timeLeft = getRoundTime();
                     timerEnded = false;
 
-                    // Update the UI for round number and letters
                     updateRoundDisplay();
                     buildPyramid(session.getCurrentLetters().toCharArray());
 
-                    // Clear the current word and re‑enable entry
                     resetWord();
                     enterButton.setDisabled(false);
 
@@ -210,11 +191,7 @@ public class GameView extends ScreenAdapter {
 
                     nextRoundButton.setVisible(false);
                     nextRoundButton.setDisabled(true);
-
-                    System.out.println("Round " + session.getCurrentRound() + " begins.");
-
                 } else {
-                    // No more rounds → go to results
                     game.setScreen(new ResultView(game, session, game.getLobbyController()));
                 }
             }
@@ -222,16 +199,53 @@ public class GameView extends ScreenAdapter {
         rootTable.add(nextRoundButton).width(180).height(70).colspan(3).center();
     }
 
-    private void updateLetters() {
-        // Update letter buttons if the available letters change
-        char[] letters = session.getCurrentLetters().toCharArray();
-        for (int i = 0; i < letterButtons.size() && i < letters.length; i++) {
-            letterButtons.get(i).setText(String.valueOf(letters[i]));
-        }
-        buildPyramid(letters);
+    private void showLeaveConfirmation() {
+        Dialog dialog = new Dialog("", skin);
+
+        Label.LabelStyle labelStyle = new Label.LabelStyle(cinzelFont, Color.BLACK);
+        Label msgLabel = new Label("Are you sure you want to leave the game?", labelStyle);
+        msgLabel.setWrap(true);
+        dialog.getContentTable()
+                .pad(20)
+                .add(msgLabel)
+                .width(stage.getViewport().getWorldWidth() * 0.8f)
+                .row();
+
+        ImageButton leaveBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(leaveTexture)));
+        leaveBtn.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                dialog.hide();
+                String pin = session.getLobby().getPin();
+                String playerId = session.getLocalPlayer().getId();
+
+                game.getLobbyController().leaveGame(pin, playerId, () -> {
+                    Gdx.app.postRunnable(() ->
+                            game.setScreen(new LogInView(game, session, game.getLobbyController()))
+                    );
+                });
+            }
+        });
+
+        ImageButton cancelBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(cancelTexture)));
+        cancelBtn.addListener(new ClickListener() {
+            @Override public void clicked(InputEvent event, float x, float y) {
+                dialog.hide();
+            }
+        });
+
+        Table btnTable = new Table();
+        btnTable.add(leaveBtn).size(240, 120).padRight(20);
+        btnTable.add(cancelBtn).size(240, 120);
+        dialog.getButtonTable().add(btnTable).center().padTop(30);
+        dialog.pack();
+        dialog.show(stage);
+
+        float x = (stage.getViewport().getWorldWidth() - dialog.getWidth()) / 2f;
+        float y = (stage.getViewport().getWorldHeight() - dialog.getHeight()) / 2f - 200f;
+        dialog.setPosition(x, y);
     }
 
-    // build pyramid updated to include all letters
     private void buildPyramid(char[] letters) {
         float tileSize = 90f;
         int index = 0;
@@ -239,28 +253,12 @@ public class GameView extends ScreenAdapter {
         pyramidContainer.clear();
         letterButtons.clear();
 
-        int total = letters.length;
-        int[] rowLayout;
-
-        switch (total) {
-            case 3: rowLayout = new int[]{3}; break;
-            case 4: rowLayout = new int[]{1, 3}; break;
-            case 5: rowLayout = new int[]{2, 3}; break;
-            case 6: rowLayout = new int[]{1, 2, 3}; break;
-            case 7: rowLayout = new int[]{1, 3, 3}; break;
-            default: rowLayout = new int[]{1, 2, 3}; break;
-        }
-
+        int[] rowLayout = {1, 2, 3};
         for (int rowCount : rowLayout) {
-            if (index >= total) break;
-
             Table row = new Table();
-
-            for (int i = 0; i < rowCount && index < total; i++) {
+            for (int i = 0; i < rowCount && index < letters.length; i++) {
                 row.add(createTile(letters[index++], tileSize)).size(tileSize).pad(5);
             }
-
-            // Add the whole row centered inside pyramidContainer
             pyramidContainer.add(row).colspan(3).padBottom(10).center();
             pyramidContainer.row();
         }
@@ -276,9 +274,8 @@ public class GameView extends ScreenAdapter {
         tile.setSize(size, size);
 
         tile.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                if (((TextButton) event.getListenerActor()).isDisabled()) return;
+            @Override public void clicked(InputEvent event, float x, float y) {
+                if (tile.isDisabled()) return;
                 currentWord.append(letter);
                 wordLabel.setText(currentWord.toString());
             }
@@ -315,8 +312,8 @@ public class GameView extends ScreenAdapter {
         batch.setProjectionMatrix(stage.getCamera().combined);
         batch.begin();
         batch.draw(backgroundTexture, 0, 0,
-            stage.getViewport().getWorldWidth(),
-            stage.getViewport().getWorldHeight());
+                stage.getViewport().getWorldWidth(),
+                stage.getViewport().getWorldHeight());
         batch.end();
 
         if (!timerEnded) {
@@ -327,7 +324,6 @@ public class GameView extends ScreenAdapter {
             if (timeLeft <= 0) {
                 timerEnded = true;
                 timerLabel.setText("Time's up!");
-                System.out.println("Disabling " + letterButtons.size() + " letter buttons.");
 
                 for (TextButton button : letterButtons) {
                     button.setDisabled(true);
@@ -335,15 +331,19 @@ public class GameView extends ScreenAdapter {
                 }
 
                 enterButton.setDisabled(true);
-                // Next round button appears
                 nextRoundButton.setVisible(true);
                 nextRoundButton.setDisabled(false);
+
+                if (session.getCurrentRound() == session.getTotalRounds()) {
+                    nextRoundButton.getImage().setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("seeresults.png"))));
+                }
             }
         }
 
         stage.act(delta);
         stage.draw();
     }
+
     private void updateWordDisplay() {
         wordLabel.setText(currentWord.toString());
     }
@@ -351,8 +351,10 @@ public class GameView extends ScreenAdapter {
     private void resetWord() {
         currentWord.setLength(0);
         updateWordDisplay();
-        System.out.println("current word: "+currentWord);
-        System.out.println("wordlabel: "+wordLabel);
+    }
+
+    private boolean isHost() {
+        return session.getLocalPlayer().getUid().equals(session.getLobby().getPlayers().get(0).getUid());
     }
 
     public void updateScore() {
@@ -373,5 +375,7 @@ public class GameView extends ScreenAdapter {
         blockTexture.dispose();
         enterTexture.dispose();
         nextRoundTexture.dispose();
+        leaveTexture.dispose();
+        cancelTexture.dispose();
     }
 }

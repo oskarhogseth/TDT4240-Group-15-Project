@@ -27,6 +27,8 @@ public class CreateGameView extends ScreenAdapter {
     private final Launcher game;
     private final GameSession session;
     private final LobbyController controller;
+    private BitmapFont smallFont;
+
 
     private Stage stage;
     private SpriteBatch batch;
@@ -98,6 +100,12 @@ public class CreateGameView extends ScreenAdapter {
         param.size = 54;
         param.color = Color.GRAY;
         font = gen.generateFont(param);
+
+        FreeTypeFontGenerator.FreeTypeFontParameter smallParam = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        smallParam.size = 30; // Smaller size
+        smallParam.color = Color.DARK_GRAY;
+        smallFont = gen.generateFont(smallParam);
+
         gen.dispose();
 
         // Input fields
@@ -158,6 +166,8 @@ public class CreateGameView extends ScreenAdapter {
         drawButton(batch, roundRects[0], selectedRounds.equals("3") ? threeYellow : threeBronze);
         drawButton(batch, roundRects[1], selectedRounds.equals("5") ? fiveYellow : fiveBronze);
         drawButton(batch, roundRects[2], selectedRounds.equals("7") ? sevenYellow : sevenBronze);
+        smallFont.draw(batch, "(Only 5-round games are tracked in the leaderboard)", 100, 1325);
+
 
         font.draw(batch, "SELECT DIFFICULTY", 150, 1240);
         drawButton(batch, difficultyRects[0], selectedDifficulty.equals("normal") ? normalYellow : normalBronze);
@@ -201,6 +211,7 @@ public class CreateGameView extends ScreenAdapter {
                         @Override
                         public void onSuccess(String pin) {
                             Gdx.app.postRunnable(() -> {
+                                session.setTotalRounds(Integer.parseInt(selectedRounds));
                                 session.getLobby().setPin(pin);
                                 Player host = new Player(nickname, nickname);
                                 session.setLocalPlayer(host);
@@ -264,6 +275,7 @@ public class CreateGameView extends ScreenAdapter {
         stage.dispose();
         batch.dispose();
         font.dispose();
+        smallFont.dispose();
         backgroundTexture.dispose();
         createButtonTexture.dispose();
         backButtonTexture.dispose();
