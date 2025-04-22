@@ -76,4 +76,4 @@
 - **Leaderboard**: View rankings after finishing all rounds.
 
 ## Additional notes
-In the branch 73-improve-mvc you will find the code organized in MVC architectural pattern. This branch has a few bugs regarding the Leaderboard-functionality, and due to lack of time it is therefore not merged into the final Master branch. We leave this note to show knowledge and understanding about the MVC principles.
+In the branch 73-improve-mvc you will find the code organized in a better MVC architectural pattern. This branch has a few bugs regarding the Leaderboard-functionality, and due to lack of time it is therefore not merged into the final Master branch. We leave this note to show knowledge and understanding about the MVC principles.
