@@ -2,19 +2,13 @@ package group15.gdx.project.view;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
-import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.GL20;
-import com.badlogic.gdx.graphics.Pixmap;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.*;
+import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
-import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.scenes.scene2d.utils.*;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import group15.gdx.project.Launcher;
 import group15.gdx.project.model.GameSession;
@@ -36,8 +30,6 @@ public class GameView extends ScreenAdapter {
     private BitmapFont cinzelFont;
 
     private Texture backgroundTexture, blockTexture, enterTexture, nextRoundTexture;
-    private Texture leaveTexture, cancelTexture;
-
     private Table rootTable;
     private Table pyramidContainer;
 
@@ -63,8 +55,6 @@ public class GameView extends ScreenAdapter {
         blockTexture = new Texture("block.png");
         enterTexture = new Texture("enterword.png");
         nextRoundTexture = new Texture("nextround.png");
-        leaveTexture = new Texture("leavegame.png");
-        cancelTexture = new Texture("cancel.png");
 
         skin = new Skin(Gdx.files.internal("vhs.json"));
         cinzelFont = loadCinzelFont(32);
@@ -96,8 +86,7 @@ public class GameView extends ScreenAdapter {
 
         TextButton closeButton = new TextButton("X", skin);
         closeButton.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
+            @Override public void clicked(InputEvent event, float x, float y) {
                 showLeaveConfirmation();
             }
         });
@@ -200,22 +189,27 @@ public class GameView extends ScreenAdapter {
     }
 
     private void showLeaveConfirmation() {
-        Dialog dialog = new Dialog("", skin);
+        Image dimOverlay = new Image(createSolidColorDrawable(0, 0, 0, 0.6f));
+        dimOverlay.setSize(stage.getViewport().getWorldWidth(), stage.getViewport().getWorldHeight());
+        stage.addActor(dimOverlay);
+
+        Table dialog = new Table();
+        dialog.setBackground(new TextureRegionDrawable(new TextureRegion(new Texture("block.png"))));
+        dialog.setSize(800, 600);
 
         Label.LabelStyle labelStyle = new Label.LabelStyle(cinzelFont, Color.BLACK);
         Label msgLabel = new Label("Are you sure you want to leave the game?", labelStyle);
         msgLabel.setWrap(true);
-        dialog.getContentTable()
-                .pad(20)
-                .add(msgLabel)
-                .width(stage.getViewport().getWorldWidth() * 0.8f)
-                .row();
+        msgLabel.setAlignment(Align.center);
+        dialog.add(msgLabel).width(700).padTop(60).colspan(2).center();
+        dialog.row();
 
-        ImageButton leaveBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(leaveTexture)));
+        ImageButton leaveBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(new Texture("leave.png"))));
         leaveBtn.addListener(new ClickListener() {
-            @Override
-            public void clicked(InputEvent event, float x, float y) {
-                dialog.hide();
+            @Override public void clicked(InputEvent event, float x, float y) {
+                dialog.remove();
+                dimOverlay.remove();
+
                 String pin = session.getLobby().getPin();
                 String playerId = session.getLocalPlayer().getId();
 
@@ -227,32 +221,28 @@ public class GameView extends ScreenAdapter {
             }
         });
 
-        ImageButton cancelBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(cancelTexture)));
+        ImageButton cancelBtn = new ImageButton(new TextureRegionDrawable(new TextureRegion(new Texture("cancel.png"))));
         cancelBtn.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
-                dialog.hide();
+                dialog.remove();
+                dimOverlay.remove();
             }
         });
 
-        Table btnTable = new Table();
-        btnTable.add(leaveBtn).size(240, 120).padRight(20);
-        btnTable.add(cancelBtn).size(240, 120);
-        dialog.getButtonTable().add(btnTable).center().padTop(30);
-        dialog.pack();
-        dialog.show(stage);
-
-        float x = (stage.getViewport().getWorldWidth() - dialog.getWidth()) / 2f;
-        float y = (stage.getViewport().getWorldHeight() - dialog.getHeight()) / 2f - 200f;
-        dialog.setPosition(x, y);
+        dialog.add(leaveBtn).size(240, 120).padTop(60).padRight(40);
+        dialog.add(cancelBtn).size(240, 120).padTop(60);
+        dialog.setPosition(
+                (stage.getViewport().getWorldWidth() - dialog.getWidth()) / 2f,
+                (stage.getViewport().getWorldHeight() - dialog.getHeight()) / 2f
+        );
+        stage.addActor(dialog);
     }
 
     private void buildPyramid(char[] letters) {
         float tileSize = 90f;
         int index = 0;
-
         pyramidContainer.clear();
         letterButtons.clear();
-
         int[] rowLayout = {1, 2, 3};
         for (int rowCount : rowLayout) {
             Table row = new Table();
@@ -335,7 +325,7 @@ public class GameView extends ScreenAdapter {
                 nextRoundButton.setDisabled(false);
 
                 if (session.getCurrentRound() == session.getTotalRounds()) {
-                    nextRoundButton.getImage().setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("seeresults.png"))));
+                    nextRoundButton.getImage().setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("viewresults.png"))));
                 }
             }
         }
@@ -375,7 +365,5 @@ public class GameView extends ScreenAdapter {
         blockTexture.dispose();
         enterTexture.dispose();
         nextRoundTexture.dispose();
-        leaveTexture.dispose();
-        cancelTexture.dispose();
     }
 }
