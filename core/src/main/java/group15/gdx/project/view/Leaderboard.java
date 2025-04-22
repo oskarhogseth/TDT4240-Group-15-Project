@@ -106,7 +106,7 @@ public class Leaderboard extends ScreenAdapter {
         leaderboardTable.row();
 
         // Add scores
-        int displayCount = Math.min(leaderboard.size(), 10);
+        int displayCount = Math.min(leaderboard.size(), 30);
 
         System.out.println("Leaderboard size: " + leaderboard.size());
         for (int i = 0; i < displayCount; i++) {
