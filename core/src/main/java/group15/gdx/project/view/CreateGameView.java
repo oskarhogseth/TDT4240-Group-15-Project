@@ -41,6 +41,8 @@ public class CreateGameView extends ScreenAdapter {
     private Texture volumeTexture;
     private Texture muteTexture;
     private ImageButton volumeButton;
+    private Label errorLabel;
+
 
     private Texture threeBronze, fiveBronze, sevenBronze;
     private Texture threeYellow, fiveYellow, sevenYellow;
@@ -115,6 +117,12 @@ public class CreateGameView extends ScreenAdapter {
         nicknameField.setPosition(180, 1720);
         stage.addActor(nicknameField);
         nicknameBox = new Rectangle(170, 1725, 740, 120);
+
+        errorLabel = new Label("", new Label.LabelStyle(font, Color.RED));
+        errorLabel.setFontScale(1f);
+        errorLabel.setPosition(180, 1650); // adjust Y-position if overlapping
+        stage.addActor(errorLabel);
+
 
         // Buttons
         roundRects = new Rectangle[3];
@@ -202,31 +210,36 @@ public class CreateGameView extends ScreenAdapter {
 
         if (createButtonRect.contains(touch)) {
             String nickname = nicknameField.getText().trim();
-            if (!nickname.isEmpty()) {
+            if (nickname.isEmpty()) {
+                errorLabel.setText("Please enter a nickname");
+                return;
+            } else {
+                errorLabel.setText(""); // Clear previous error if input is valid
                 controller.createLobby(
-                    nickname,
-                    Integer.parseInt(selectedRounds),
-                    selectedDifficulty.toUpperCase(),
-                    new LobbyServiceInterface.CreateCallback() {
-                        @Override
-                        public void onSuccess(String pin) {
-                            Gdx.app.postRunnable(() -> {
-                                session.setTotalRounds(Integer.parseInt(selectedRounds));
-                                session.getLobby().setPin(pin);
-                                Player host = new Player(nickname, nickname);
-                                session.setLocalPlayer(host);
-                                session.getLobby().updatePlayersFromMap(Map.of(host.getId(), nickname));
-                                game.setScreen(new LobbyView(game, session, controller));
-                            });
-                        }
+                        nickname,
+                        Integer.parseInt(selectedRounds),
+                        selectedDifficulty.toUpperCase(),
+                        new LobbyServiceInterface.CreateCallback() {
+                            @Override
+                            public void onSuccess(String pin) {
+                                Gdx.app.postRunnable(() -> {
+                                    session.setTotalRounds(Integer.parseInt(selectedRounds));
+                                    session.getLobby().setPin(pin);
+                                    Player host = new Player(nickname, nickname);
+                                    session.setLocalPlayer(host);
+                                    session.getLobby().updatePlayersFromMap(Map.of(host.getId(), nickname));
+                                    game.setScreen(new LobbyView(game, session, controller));
+                                });
+                            }
 
-                        @Override
-                        public void onError(String msg) {
-                            Gdx.app.postRunnable(() -> showAlert(msg));
+                            @Override
+                            public void onError(String msg) {
+                                Gdx.app.postRunnable(() -> showAlert(msg));
+                            }
                         }
-                    }
                 );
             }
+
         }
 
         if (backButtonRect.contains(touch)) {
