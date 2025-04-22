@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class GameView extends ScreenAdapter {
-
     private final Launcher game;
     private final GameSession session;
     private final Player player;
@@ -67,8 +66,7 @@ public class GameView extends ScreenAdapter {
     }
 
     private float getRoundTime() {
-        String diff = session.getSelectedDifficulty();
-        return "HARD".equalsIgnoreCase(diff) ? 15f : 30f;
+        return "HARD".equalsIgnoreCase(session.getSelectedDifficulty()) ? 15f : 30f;
     }
 
     private void setupUI() {
@@ -129,8 +127,7 @@ public class GameView extends ScreenAdapter {
 
         rootTable.row().padTop(40);
 
-        Image enterImage = new Image(enterTexture);
-        enterButton = new ImageButton(enterImage.getDrawable());
+        enterButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(enterTexture)));
         enterButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 if (enterButton.isDisabled()) return;
@@ -153,15 +150,13 @@ public class GameView extends ScreenAdapter {
         rootTable.add(enterButton).width(1000).height(150).colspan(3).center();
         rootTable.row().padTop(30);
 
-        Image nextImage = new Image(nextRoundTexture);
-        nextRoundButton = new ImageButton(nextImage.getDrawable());
+        nextRoundButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(nextRoundTexture)));
         nextRoundButton.setVisible(false);
         nextRoundButton.setDisabled(true);
         nextRoundButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 if (session.getCurrentRound() < session.getTotalRounds()) {
-                    session.nextRound();
-                    LetterSet newSet = session.getGameController().generateLetters();
+                    LetterSet newSet = session.getGameController().startNextRound();
                     session.getLobby().setCurrentLetterSet(newSet);
 
                     timeLeft = getRoundTime();
@@ -327,7 +322,8 @@ public class GameView extends ScreenAdapter {
                 nextRoundButton.setDisabled(false);
 
                 if (session.getCurrentRound() == session.getTotalRounds()) {
-                    nextRoundButton.getImage().setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("viewresults.png"))));
+                    nextRoundButton.getImage().setDrawable(
+                            new TextureRegionDrawable(new TextureRegion(new Texture("viewresults.png"))));
                 }
             }
         }
@@ -345,11 +341,7 @@ public class GameView extends ScreenAdapter {
         updateWordDisplay();
     }
 
-    private boolean isHost() {
-        return session.getLocalPlayer().getUid().equals(session.getLobby().getPlayers().get(0).getUid());
-    }
-
-    public void updateScore() {
+    private void updateScore() {
         pointsLabel.setText("YOU HAVE " + player.getScore() + " POINTS");
     }
 

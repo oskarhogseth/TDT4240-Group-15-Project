@@ -12,7 +12,6 @@ public class GameController {
     private final GameSession gameSession;
     private final Random random = new Random();
 
-    // Our in-memory dictionary: sortedKey -> all valid words
     private final Map<String, List<String>> dictionaryMap = new HashMap<>();
     private List<String> dictionaryKeys = new ArrayList<>();
 
@@ -132,5 +131,11 @@ public class GameController {
         if (words != null) {
             System.out.println("Possible words: " + words);
         }
+    }
+
+    // Called from GameView when next round begins
+    public LetterSet startNextRound() {
+        gameSession.nextRound();
+        return generateLetters();
     }
 }
