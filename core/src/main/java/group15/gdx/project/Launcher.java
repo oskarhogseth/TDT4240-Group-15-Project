@@ -59,7 +59,7 @@ public class Launcher extends Game implements GestureListener {
     @Override
     public void create() {
         session = new GameSession();
-        controller = new LobbyController(lobbyService);
+        controller = new LobbyController(lobbyService, session);
         gameSong = new GameSong();
         gameSong.play(); // Start music at launch
 

@@ -14,13 +14,9 @@ import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import group15.gdx.project.Launcher;
+import group15.gdx.project.controller.CreateGameControllerInterface;
 import group15.gdx.project.controller.LobbyController;
-import group15.gdx.project.controller.LobbyServiceInterface;
 import group15.gdx.project.model.GameSession;
-import group15.gdx.project.model.Player;
-
-
-import java.util.Map;
 
 public class CreateGameView extends ScreenAdapter {
 
@@ -28,7 +24,6 @@ public class CreateGameView extends ScreenAdapter {
     private final GameSession session;
     private final LobbyController controller;
     private BitmapFont smallFont;
-
 
     private Stage stage;
     private SpriteBatch batch;
@@ -42,7 +37,6 @@ public class CreateGameView extends ScreenAdapter {
     private Texture muteTexture;
     private ImageButton volumeButton;
     private Label errorLabel;
-
 
     private Texture threeBronze, fiveBronze, sevenBronze;
     private Texture threeYellow, fiveYellow, sevenYellow;
@@ -74,14 +68,12 @@ public class CreateGameView extends ScreenAdapter {
         Gdx.input.setInputProcessor(stage);
         batch = new SpriteBatch();
 
-        // Load textures
         backgroundTexture = new Texture("background.png");
         createButtonTexture = new Texture("creategame.png");
         backButtonTexture = new Texture("back.png");
         logoTexture = new Texture("wordduel.png");
         volumeTexture = new Texture("volume.png");
         muteTexture = new Texture("mute.png");
-
         whiteBox = createSolidColorTexture(Color.WHITE);
 
         threeBronze = new Texture("threebronze.png");
@@ -96,7 +88,6 @@ public class CreateGameView extends ScreenAdapter {
         normalYellow = new Texture("normalyellow.png");
         hardYellow = new Texture("hardyellow.png");
 
-        // Font
         FreeTypeFontGenerator gen = new FreeTypeFontGenerator(Gdx.files.internal("cinzel.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
         param.size = 54;
@@ -104,13 +95,11 @@ public class CreateGameView extends ScreenAdapter {
         font = gen.generateFont(param);
 
         FreeTypeFontGenerator.FreeTypeFontParameter smallParam = new FreeTypeFontGenerator.FreeTypeFontParameter();
-        smallParam.size = 30; // Smaller size
+        smallParam.size = 30;
         smallParam.color = Color.DARK_GRAY;
         smallFont = gen.generateFont(smallParam);
-
         gen.dispose();
 
-        // Input fields
         nicknameField = new TextField("", createTextFieldStyle());
         nicknameField.setMessageText("Nickname");
         nicknameField.setSize(720, 120);
@@ -120,19 +109,13 @@ public class CreateGameView extends ScreenAdapter {
 
         errorLabel = new Label("", new Label.LabelStyle(font, Color.RED));
         errorLabel.setFontScale(1f);
-        errorLabel.setPosition(180, 1650); // adjust Y-position if overlapping
+        errorLabel.setPosition(180, 1650);
         stage.addActor(errorLabel);
 
-
-        // Buttons
         roundRects = new Rectangle[3];
         difficultyRects = new Rectangle[2];
-        for (int i = 0; i < 3; i++) {
-            roundRects[i] = new Rectangle(130 + i * 270, 1350, 240, 130);
-        }
-        for (int i = 0; i < 2; i++) {
-            difficultyRects[i] = new Rectangle(210 + i * 330, 1050, 300, 130);
-        }
+        for (int i = 0; i < 3; i++) roundRects[i] = new Rectangle(130 + i * 270, 1350, 240, 130);
+        for (int i = 0; i < 2; i++) difficultyRects[i] = new Rectangle(210 + i * 330, 1050, 300, 130);
 
         createButtonRect = new Rectangle(324, 450, 432, 144);
         backButtonRect = new Rectangle(324, 200, 432, 144);
@@ -141,12 +124,10 @@ public class CreateGameView extends ScreenAdapter {
     }
 
     private void setupVolumeButton() {
-        TextureRegionDrawable iconDrawable = new TextureRegionDrawable(
-                new TextureRegion(game.isMuted() ? muteTexture : volumeTexture));
+        TextureRegionDrawable iconDrawable = new TextureRegionDrawable(new TextureRegion(game.isMuted() ? muteTexture : volumeTexture));
         volumeButton = new ImageButton(iconDrawable);
         volumeButton.setSize(100, 100);
-        volumeButton.setPosition(stage.getViewport().getWorldWidth() - 110,
-                stage.getViewport().getWorldHeight() - 110);
+        volumeButton.setPosition(stage.getViewport().getWorldWidth() - 110, stage.getViewport().getWorldHeight() - 110);
         volumeButton.addListener(new ClickListener() {
             @Override
             public void clicked(InputEvent event, float x, float y) {
@@ -175,7 +156,6 @@ public class CreateGameView extends ScreenAdapter {
         drawButton(batch, roundRects[1], selectedRounds.equals("5") ? fiveYellow : fiveBronze);
         drawButton(batch, roundRects[2], selectedRounds.equals("7") ? sevenYellow : sevenBronze);
         smallFont.draw(batch, "(Only 5-round games are tracked in the leaderboard)", 100, 1325);
-
 
         font.draw(batch, "SELECT DIFFICULTY", 150, 1240);
         drawButton(batch, difficultyRects[0], selectedDifficulty.equals("normal") ? normalYellow : normalBronze);
@@ -214,32 +194,15 @@ public class CreateGameView extends ScreenAdapter {
                 errorLabel.setText("Please enter a nickname");
                 return;
             } else {
-                errorLabel.setText(""); // Clear previous error if input is valid
+                errorLabel.setText("");
                 controller.createLobby(
                         nickname,
                         Integer.parseInt(selectedRounds),
                         selectedDifficulty.toUpperCase(),
-                        new LobbyServiceInterface.CreateCallback() {
-                            @Override
-                            public void onSuccess(String pin) {
-                                Gdx.app.postRunnable(() -> {
-                                    session.setTotalRounds(Integer.parseInt(selectedRounds));
-                                    session.getLobby().setPin(pin);
-                                    Player host = new Player(nickname, nickname);
-                                    session.setLocalPlayer(host);
-                                    session.getLobby().updatePlayersFromMap(Map.of(host.getId(), nickname));
-                                    game.setScreen(new LobbyView(game, session, controller));
-                                });
-                            }
-
-                            @Override
-                            public void onError(String msg) {
-                                Gdx.app.postRunnable(() -> showAlert(msg));
-                            }
-                        }
+                        () -> Gdx.app.postRunnable(() -> game.setScreen(new LobbyView(game, session, (LobbyController) controller))),
+                        () -> Gdx.app.postRunnable(() -> showAlert("Lobby creation failed. Try again."))
                 );
             }
-
         }
 
         if (backButtonRect.contains(touch)) {
@@ -252,12 +215,7 @@ public class CreateGameView extends ScreenAdapter {
         Label.LabelStyle labelStyle = new Label.LabelStyle(font, Color.BLACK);
         Label msgLabel = new Label(message, labelStyle);
         msgLabel.setWrap(true);
-
-        dialog.getContentTable()
-            .pad(20)
-            .add(msgLabel)
-            .width(stage.getViewport().getWorldWidth() * 0.8f)
-            .row();
+        dialog.getContentTable().pad(20).add(msgLabel).width(stage.getViewport().getWorldWidth() * 0.8f).row();
         dialog.button("OK", true).padTop(10);
         dialog.pack();
         dialog.show(stage);
