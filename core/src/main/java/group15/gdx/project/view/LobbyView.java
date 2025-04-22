@@ -64,7 +64,7 @@ public class LobbyView extends ScreenAdapter {
         endGameTexture = new Texture("endgame.png");
 
         skin = new Skin(Gdx.files.internal("vhs.json"));
-        cinzelFont = loadCinzelFont(48); // Big but not too huge
+        cinzelFont = loadCinzelFont(48);
         skin.get(Label.LabelStyle.class).font = cinzelFont;
 
         setupUI();
