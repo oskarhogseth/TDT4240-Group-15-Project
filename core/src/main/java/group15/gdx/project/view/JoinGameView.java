@@ -154,8 +154,8 @@ public class JoinGameView extends ScreenAdapter {
                 return;
             }
 
-            if (pin.length() != 4 || !pin.matches("\\d+")) {
-                errorLabel.setText("PIN must be a 4-digit number.");
+            if (pin.length() != 5 || !pin.matches("\\d+")) {
+                errorLabel.setText("PIN must be a 5-digit number.");
                 return;
             }
 
