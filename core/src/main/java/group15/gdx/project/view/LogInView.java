@@ -48,7 +48,7 @@ public class LogInView extends ScreenAdapter {
         logoTexture = new Texture("wordduel.png");
         createTexture = new Texture("createnewgame.png");
         joinTexture = new Texture("joingame1.png");
-        leaderboardTexture = new Texture("scoreboard.png");
+        leaderboardTexture = new Texture("leaderboard.png");
         howToPlayTexture = new Texture("howtoplay.png");
         volumeTexture = new Texture("volume.png");
         muteTexture = new Texture("mute.png");
@@ -66,12 +66,13 @@ public class LogInView extends ScreenAdapter {
 
         Table root = new Table();
         root.setFillParent(true);
+        root.bottom().padBottom(screenHeight * 0.07f); // Move buttons up slightly
         stage.addActor(root);
 
         // Logo
         Image logo = new Image(logoTexture);
         logo.setSize(screenWidth * 0.8f, screenHeight * 0.2f);
-        root.add(logo).colspan(2).padTop(150).padBottom(80).center();
+        root.add(logo).colspan(2).padTop(100).padBottom(50).center(); // was 150/80
         root.row();
 
         // Buttons column
