@@ -327,7 +327,7 @@ public class GameView extends ScreenAdapter {
                 nextRoundButton.setDisabled(false);
 
                 if (session.getCurrentRound() == session.getTotalRounds()) {
-                    nextRoundButton.getImage().setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("viewresults.png"))));
+                    nextRoundButton.getImage().setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture("seeresults.png"))));
                 }
             }
         }
