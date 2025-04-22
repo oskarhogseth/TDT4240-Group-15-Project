@@ -4,15 +4,30 @@ import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.ScreenAdapter;
 import com.badlogic.gdx.graphics.*;
 import com.badlogic.gdx.graphics.g2d.*;
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
+import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.*;
+import com.badlogic.gdx.scenes.scene2d.InputEvent;
+import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
+import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.Table;
+import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LobbyController;
 import group15.gdx.project.model.GameSession;
+import group15.gdx.project.model.LetterSet;
 import group15.gdx.project.model.Player;
 import group15.gdx.project.model.Score;
 
@@ -83,8 +98,8 @@ public class ResultView extends ScreenAdapter {
 
         // Ranked Scores
         List<Player> sortedPlayers = session.getLobby().getPlayers().stream()
-                .sorted(Comparator.comparingInt(Player::getScore).reversed())
-                .collect(Collectors.toList());
+            .sorted(Comparator.comparingInt(Player::getScore).reversed())
+            .collect(Collectors.toList());
 
         int rank = 1;
         for (Player player : sortedPlayers) {
@@ -102,18 +117,46 @@ public class ResultView extends ScreenAdapter {
         Table buttonRow = new Table();
         buttonRow.padTop(80);
 
+        // play again button
         ImageButton playAgain = new ImageButton(new TextureRegionDrawable(new TextureRegion(playAgainTexture)));
         playAgain.addListener(new ClickListener() {
-            @Override public void clicked(InputEvent event, float x, float y) {
-                session.getGameController().generateLetters();
-                game.setScreen(new LobbyView(game, session, controller));
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                String pin = session.getLobby().getPin();
+
+                controller.resetLobby(pin,
+                    // onSuccess:
+                    () -> Gdx.app.postRunnable(() -> {
+                        session.resetGame();
+                        LetterSet set = session.getGameController().generateLetters();
+                        controller.startGame(pin, set);
+                        game.setScreen(
+                            new GameView(game, session, session.getLocalPlayer())
+                        );
+                    }),
+                    // onFailure:
+                    () -> Gdx.app.postRunnable(() ->
+                        showAlert("Could not restart game, please try again")
+                    )
+                );
             }
         });
 
         ImageButton backButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(backTexture)));
         backButton.addListener(new ClickListener() {
-            @Override public void clicked(InputEvent event, float x, float y) {
-                game.setScreen(new LogInView(game, session, controller));
+            @Override
+            public void clicked(InputEvent event, float x, float y) {
+                String pin = session.getLobby().getPin();
+                controller.resetLobby(pin,
+                    // onSuccess: show the lobby again
+                    () -> Gdx.app.postRunnable(() ->
+                        game.setScreen(new LobbyView(game, session, controller))
+                    ),
+                    // onFailure: show an error dialog
+                    () -> Gdx.app.postRunnable(() ->
+                        showAlert("Failed to reset lobby, please try again")
+                    )
+                );
             }
         });
 
@@ -149,10 +192,10 @@ public class ResultView extends ScreenAdapter {
         FreeTypeFontGenerator gen = new FreeTypeFontGenerator(Gdx.files.internal(path));
         FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
         param.size = size;
-        param.color = Color.BLACK;
-        BitmapFont f = gen.generateFont(param);
+        param.color = com.badlogic.gdx.graphics.Color.BLACK;
+        BitmapFont font = gen.generateFont(param);
         gen.dispose();
-        return f;
+        return font;
     }
 
     @Override
@@ -183,5 +226,27 @@ public class ResultView extends ScreenAdapter {
         font.dispose();
         boldFont.dispose();
         skin.dispose();
+    }
+
+    private void showAlert(String message) {
+        Dialog dialog = new Dialog("Error", skin);
+        Label.LabelStyle style = new Label.LabelStyle(font, Color.BLACK);
+        Label msg = new Label(message, style);
+        msg.setWrap(true);
+
+        dialog.getContentTable()
+            .pad(20)
+            .add(msg)
+            .width(stage.getViewport().getWorldWidth() * 0.8f)
+            .row();
+
+        dialog.button("OK", true).padTop(10);
+        dialog.pack();
+        dialog.show(stage);
+
+        // Optional: reposition so it isn't flush at the very top
+        float x = (stage.getViewport().getWorldWidth()  - dialog.getWidth())  / 2f;
+        float y = (stage.getViewport().getWorldHeight() - dialog.getHeight()) / 2f;
+        dialog.setPosition(x, y);
     }
 }

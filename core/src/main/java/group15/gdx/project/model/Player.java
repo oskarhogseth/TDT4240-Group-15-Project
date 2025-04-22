@@ -30,6 +30,10 @@ public class Player {
     public void addScore(int amount) {
         this.score += amount;
     }
+
+    public void resetScore() {
+        this.score = 0;
+    }
     public Map<String, Object> toMap() {
         Map<String, Object> map = new HashMap<>();
         map.put("nickname", nickname);
