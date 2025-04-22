@@ -120,9 +120,10 @@ public class LobbyView extends ScreenAdapter {
                 }
             });
             root.add(startButton)
-                .size(220, 80)
+                .size(440, 160)
                 .padTop(40)
                 .colspan(2)
+                .fill()
                 .center();
             root.row();
         }
@@ -139,7 +140,6 @@ public class LobbyView extends ScreenAdapter {
         Table overlay = new Table(skin);
         overlay.setFillParent(true);
         overlay.top().right().pad(10);
-        overlay.add(infoButton).size(screenHeight * 0.04f);
         stage.addActor(overlay);
     }
 
