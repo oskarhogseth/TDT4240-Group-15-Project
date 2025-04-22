@@ -9,6 +9,7 @@ import com.badlogic.gdx.scenes.scene2d.*;
 import com.badlogic.gdx.scenes.scene2d.ui.*;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import group15.gdx.project.Launcher;
 import group15.gdx.project.controller.LobbyController;
@@ -32,11 +33,6 @@ public class HowToPlayView extends ScreenAdapter {
     private Texture backButtonTexture;
     private ImageButton volumeButton;
 
-    private static final String HOW_TO_PLAY_TEXT =
-            "• Guess as many words as possible in each round!\n\n" +
-                    "• All possible words have between 3 to 7 characters\n\n" +
-                    "• You can use the same letters multiple times\n\n";
-
     public HowToPlayView(Launcher game, GameSession session, LobbyController controller) {
         this.game = game;
         this.session = session;
@@ -53,7 +49,7 @@ public class HowToPlayView extends ScreenAdapter {
         backButtonTexture = new Texture("back.png");
 
         skin = new Skin(Gdx.files.internal("vhs.json"));
-        font = loadCinzelFont(40);
+        font = loadCinzelFont(36);
         skin.get(Label.LabelStyle.class).font = font;
 
         setupUI();
@@ -66,22 +62,44 @@ public class HowToPlayView extends ScreenAdapter {
 
         Table root = new Table();
         root.setFillParent(true);
+        root.top().padTop(sh * 0.05f);
         stage.addActor(root);
 
-        // Logo
+        // Logo at top
         Image logo = new Image(logoTexture);
-        logo.setSize(sw * 0.8f, sh * 0.2f);
-        root.add(logo).colspan(2).padTop(150).padBottom(80).center();
+        logo.setSize(sw * 0.8f, sh * 0.1f);
+        root.add(logo).colspan(2).padBottom(sh * 0.05f).center();
         root.row();
 
-        // Instructions
-        Label instructions = new Label(HOW_TO_PLAY_TEXT, skin);
-        instructions.setFontScale(0.9f);
-        instructions.setWrap(true);
-        root.add(instructions).width(sw * 0.8f).padBottom(100).center();
-        root.row();
+        // Instruction lines
+        String[] lines = new String[]{
+                "HOW TO PLAY",
+                "",
+                "1. Create or join a lobby using a game PIN and nickname.",
+                "2. Guess as many valid words as you can in each round.",
+                "3. Words must be between 3 and 7 letters long, and in the dictionary.",
+                "4. Letters can be reused more than once.",
+                "5. When the timer runs out, you'll see the round results.",
+                "6. The player with the highest score at the end wins!"
+        };
 
-        // Back button
+        for (int i = 0; i < lines.length; i++) {
+            Label line;
+            if (i == 0) {
+                Label.LabelStyle boldStyle = new Label.LabelStyle(loadCinzelBoldFont(50), Color.BLACK);
+                line = new Label(lines[i], boldStyle);
+                line.setFontScale(1.6f);
+            } else {
+                line = new Label(lines[i], skin);
+                line.setFontScale(1.2f);
+            }
+            line.setAlignment(Align.center);
+            line.setWrap(true);
+            root.add(line).width(sw * 0.85f).padBottom(i == 0 ? sh * 0.03f : sh * 0.02f);
+            root.row();
+        }
+
+        // Back button at bottom
         ImageButton backButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(backButtonTexture)));
         backButton.addListener(new ClickListener() {
             @Override
@@ -89,7 +107,12 @@ public class HowToPlayView extends ScreenAdapter {
                 game.setScreen(new LogInView(game, session, controller));
             }
         });
-        root.add(backButton).size(400, 140).padBottom(50);
+
+        Table bottom = new Table();
+        bottom.setFillParent(true);
+        bottom.bottom().padBottom(sh * 0.04f);
+        bottom.add(backButton).size(sw * 0.4f, sh * 0.06f);
+        stage.addActor(bottom);
     }
 
     private void setupVolumeButton() {
@@ -103,8 +126,8 @@ public class HowToPlayView extends ScreenAdapter {
             @Override
             public void clicked(InputEvent event, float x, float y) {
                 game.toggleMute();
-                TextureRegion iconTex = new TextureRegion(game.isMuted() ? muteTexture : volumeTexture);
-                volumeButton.getStyle().imageUp = new TextureRegionDrawable(iconTex);
+                TextureRegion newIcon = new TextureRegion(game.isMuted() ? muteTexture : volumeTexture);
+                volumeButton.getStyle().imageUp = new TextureRegionDrawable(newIcon);
             }
         });
         stage.addActor(volumeButton);
@@ -112,6 +135,16 @@ public class HowToPlayView extends ScreenAdapter {
 
     private BitmapFont loadCinzelFont(int size) {
         FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("cinzel.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        param.size = size;
+        param.color = Color.BLACK;
+        BitmapFont font = generator.generateFont(param);
+        generator.dispose();
+        return font;
+    }
+
+    private BitmapFont loadCinzelBoldFont(int size) {
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("cinzel_bold.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter param = new FreeTypeFontGenerator.FreeTypeFontParameter();
         param.size = size;
         param.color = Color.BLACK;
@@ -149,3 +182,4 @@ public class HowToPlayView extends ScreenAdapter {
         skin.dispose();
     }
 }
+

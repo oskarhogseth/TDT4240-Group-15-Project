@@ -7,18 +7,13 @@ import com.badlogic.gdx.graphics.g2d.*;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
-import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-
-import com.badlogic.gdx.scenes.scene2d.ui.*;
-
 import com.badlogic.gdx.scenes.scene2d.ui.Dialog;
 import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.TextField;
-
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
@@ -64,8 +59,6 @@ public class CreateGameView extends ScreenAdapter {
 
     private Rectangle[] roundRects;
     private Rectangle[] difficultyRects;
-
-    private Label errorLabel;
 
     private final String[] roundOptions = {"3", "5", "7"};
     private final String[] difficultyOptions = {"normal", "hard"};
@@ -113,22 +106,17 @@ public class CreateGameView extends ScreenAdapter {
         nicknameField = new TextField("", createTextFieldStyle());
         nicknameField.setMessageText("Nickname");
         nicknameField.setSize(720, 120);
-        nicknameField.setPosition(180, 1720);
+        nicknameField.setPosition(180, 1720); // moved down
         stage.addActor(nicknameField);
         nicknameBox = new Rectangle(170, 1725, 740, 120);
-
-        errorLabel = new Label("", new Label.LabelStyle(font, Color.RED));
-        errorLabel.setFontScale(1f);
-        errorLabel.setPosition(180, 600); // just above the create button
-        stage.addActor(errorLabel);
 
         roundRects = new Rectangle[3];
         difficultyRects = new Rectangle[2];
         for (int i = 0; i < 3; i++) {
-            roundRects[i] = new Rectangle(130 + i * 270, 1350, 240, 130);
+            roundRects[i] = new Rectangle(130 + i * 270, 1350, 240, 130); // moved down
         }
         for (int i = 0; i < 2; i++) {
-            difficultyRects[i] = new Rectangle(210 + i * 330, 1050, 300, 130);
+            difficultyRects[i] = new Rectangle(210 + i * 330, 1050, 300, 130); // moved down
         }
 
         createButtonRect = new Rectangle(324, 450, 432, 144);
@@ -145,7 +133,7 @@ public class CreateGameView extends ScreenAdapter {
         volumeButton.setPosition(stage.getViewport().getWorldWidth() - 110, stage.getViewport().getWorldHeight() - 110);
         volumeButton.addListener(new ClickListener() {
             @Override
-            public void clicked(InputEvent event, float x, float y) {
+            public void clicked(com.badlogic.gdx.scenes.scene2d.InputEvent event, float x, float y) {
                 game.toggleMute();
                 TextureRegion region = new TextureRegion(game.isMuted() ? muteTexture : volumeTexture);
                 volumeButton.getStyle().imageUp = new TextureRegionDrawable(region);
@@ -180,67 +168,66 @@ public class CreateGameView extends ScreenAdapter {
         batch.end();
 
         handleInput();
+
         stage.act(delta);
         stage.draw();
     }
+
 
     private void drawButton(SpriteBatch batch, Rectangle rect, Texture texture) {
         batch.draw(texture, rect.x, rect.y, rect.width, rect.height);
     }
 
-   private void handleInput() {
-    if (Gdx.input.justTouched()) {
-        Vector2 touch = new Vector2(Gdx.input.getX(), Gdx.input.getY());
-        stage.getViewport().unproject(touch);
+    private void handleInput() {
+        if (Gdx.input.justTouched()) {
+            Vector2 touch = new Vector2(Gdx.input.getX(), Gdx.input.getY());
+            stage.getViewport().unproject(touch);
 
-        for (int i = 0; i < roundRects.length; i++) {
-            if (roundRects[i].contains(touch)) {
-                selectedRounds = roundOptions[i];
+            for (int i = 0; i < roundRects.length; i++) {
+                if (roundRects[i].contains(touch)) {
+                    selectedRounds = roundOptions[i];
+                }
             }
-        }
 
-        for (int i = 0; i < difficultyRects.length; i++) {
-            if (difficultyRects[i].contains(touch)) {
-                selectedDifficulty = difficultyOptions[i];
+            for (int i = 0; i < difficultyRects.length; i++) {
+                if (difficultyRects[i].contains(touch)) {
+                    selectedDifficulty = difficultyOptions[i];
+                }
             }
-        }
 
-        if (createButtonRect.contains(touch)) {
-            String nickname = nicknameField.getText().trim();
-            if (!nickname.isEmpty()) {
-                controller.createLobby(
-                    nickname,
-                    Integer.parseInt(selectedRounds),
-                    selectedDifficulty.toUpperCase(),
-                    new LobbyController.CreateCallback() {
-                        @Override
-                        public void onSuccess(String pin) {
-                            Gdx.app.postRunnable(() -> {
-                                session.getLobby().setPin(pin);
-                                Player host = new Player(nickname, nickname);
-                                session.setLocalPlayer(host);
-                                session.getLobby().updatePlayersFromMap(Map.of(host.getId(), nickname));
-                                game.setScreen(new LobbyView(game, session, controller));
-                            });
-                        }
-
-                        @Override
-                        public void onError(String msg) {
-                            Gdx.app.postRunnable(() -> errorLabel.setText(msg));
-                        }
-                    }
-                );
-            } else {
-                errorLabel.setText("Please enter a nickname");
+            if (createButtonRect.contains(touch)) {
+                String nickname = nicknameField.getText().trim();
+                if (!nickname.isEmpty()) {
+                    controller.createLobby(
+                            nickname,
+                            Integer.parseInt(selectedRounds),
+                            selectedDifficulty.toUpperCase(),
+                            new LobbyServiceInterface.CreateCallback() {
+                                @Override
+                                public void onSuccess(String pin) {
+                                    Gdx.app.postRunnable(() -> {
+                                        session.getLobby().setPin(pin);
+                                        // set host locally
+                                        Player host = new Player(nickname, nickname);
+                                        session.setLocalPlayer(host);
+                                        session.getLobby().updatePlayersFromMap(Map.of(host.getId(), nickname));
+                                        game.setScreen(new LobbyView(game, session, controller));
+                                    });
+                                }
+                                @Override
+                                public void onError(String msg) {
+                                    Gdx.app.postRunnable(() -> showAlert(msg));
+                                }
+                            }
+                    );
+                }
             }
-        }
 
-        if (backButtonRect.contains(touch)) {
-            game.setScreen(new LogInView(game, session, controller));
+            if (backButtonRect.contains(touch)) {
+                game.setScreen(new LogInView(game, session, controller));
+            }
         }
     }
-}
-
 
     private void showAlert(String message) {
         // 1) Create
@@ -253,10 +240,10 @@ public class CreateGameView extends ScreenAdapter {
 
         // 3) Add it to the dialog’s content table, force a max width (80% of screen)
         dialog.getContentTable()
-            .pad(20)
-            .add(msgLabel)
-            .width(stage.getViewport().getWorldWidth() * 0.8f)
-            .row();
+                .pad(20)
+                .add(msgLabel)
+                .width(stage.getViewport().getWorldWidth() * 0.8f)
+                .row();
 
         // 4) Add the OK button, with padding
         dialog.button("OK", true).padTop(10);
