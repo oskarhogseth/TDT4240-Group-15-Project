@@ -157,6 +157,14 @@ public class LobbyView extends ScreenAdapter {
             @Override
             public void onPlayersUpdated(Map<String, String> players) {
                 session.getLobby().updatePlayersFromMap(players);
+
+                String myUid = session.getLocalPlayer().getUid();
+                for (Player p : session.getLobby().getPlayers()) {
+                    if (p.getUid().equals(myUid)) {
+                        session.setLocalPlayer(p);
+                        break;
+                    }
+                }
                 Gdx.app.postRunnable(() -> refreshPlayerList());
             }
 
