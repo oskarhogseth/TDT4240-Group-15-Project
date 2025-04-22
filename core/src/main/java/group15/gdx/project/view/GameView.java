@@ -57,7 +57,7 @@ public class GameView extends ScreenAdapter {
         nextRoundTexture = new Texture("nextround.png");
 
         skin = new Skin(Gdx.files.internal("vhs.json"));
-        cinzelFont = loadCinzelFont(32);
+        cinzelFont = loadCinzelFont(48);
         skin.get(Label.LabelStyle.class).font = cinzelFont;
         skin.get(TextButton.TextButtonStyle.class).font = cinzelFont;
 
@@ -74,7 +74,6 @@ public class GameView extends ScreenAdapter {
     private void setupUI() {
         float screenWidth = stage.getViewport().getWorldWidth();
         float screenHeight = stage.getViewport().getWorldHeight();
-        float baseFont = screenHeight / 40f;
 
         rootTable = new Table();
         rootTable.setFillParent(true);
@@ -92,19 +91,19 @@ public class GameView extends ScreenAdapter {
         });
 
         timerLabel = new Label("Time: " + (int) timeLeft + "s", skin);
-        timerLabel.setFontScale(1.3f);
+        timerLabel.setFontScale(1.5f);
         timerSection.add(timerLabel).expandX();
-        timerSection.add(closeButton).size(40, 40).padRight(20);
+        timerSection.add(closeButton).size(100, 100).padRight(20);
         rootTable.add(timerSection).width(screenWidth).height(screenHeight * 0.1f);
         rootTable.row();
 
         pointsLabel = new Label("YOU HAVE " + player.getScore() + " POINTS", skin);
-        pointsLabel.setFontScale(baseFont / 20f);
+        pointsLabel.setFontScale(1.3f);
         rootTable.add(pointsLabel).padTop(10).padBottom(10);
         rootTable.row();
 
         roundLabel = new Label("Round " + session.getCurrentRound() + " of " + session.getTotalRounds(), skin);
-        roundLabel.setFontScale(baseFont / 20f);
+        roundLabel.setFontScale(1.3f);
         rootTable.add(roundLabel).padBottom(10);
         rootTable.row();
 
@@ -112,21 +111,23 @@ public class GameView extends ScreenAdapter {
         wordBox.setBackground(createSolidColorDrawable(1, 1, 1, 0.9f));
         wordLabel = new Label("", skin);
         wordLabel.setColor(Color.BLACK);
-        wordLabel.setFontScale(1.8f);
+        wordLabel.setFontScale(2.5f);
         wordBox.add(wordLabel).expand().fill().pad(10);
-        rootTable.add(wordBox).width(300).height(60).colspan(3).center();
+        rootTable.add(wordBox).width(500).height(100).colspan(3).center();
         rootTable.row();
 
         feedbackLabel = new Label("", skin);
-        feedbackLabel.setFontScale(1.2f);
+        feedbackLabel.setFontScale(1.5f);
         rootTable.add(feedbackLabel).colspan(3).center().padBottom(20);
         rootTable.row();
 
         pyramidContainer = new Table();
-        rootTable.add(pyramidContainer).colspan(3).padBottom(10).center();
+        rootTable.add(pyramidContainer).colspan(3).padBottom(20).center();
         rootTable.row();
 
         buildPyramid(session.getCurrentLetters().toCharArray());
+
+        rootTable.row().padTop(40);
 
         Image enterImage = new Image(enterTexture);
         enterButton = new ImageButton(enterImage.getDrawable());
@@ -149,14 +150,13 @@ public class GameView extends ScreenAdapter {
                 resetWord();
             }
         });
-        rootTable.add(enterButton).width(180).height(40).colspan(3).center();
-        rootTable.row();
+        rootTable.add(enterButton).width(1000).height(150).colspan(3).center();
+        rootTable.row().padTop(30);
 
         Image nextImage = new Image(nextRoundTexture);
         nextRoundButton = new ImageButton(nextImage.getDrawable());
         nextRoundButton.setVisible(false);
         nextRoundButton.setDisabled(true);
-
         nextRoundButton.addListener(new ClickListener() {
             @Override public void clicked(InputEvent event, float x, float y) {
                 if (session.getCurrentRound() < session.getTotalRounds()) {
@@ -185,7 +185,45 @@ public class GameView extends ScreenAdapter {
                 }
             }
         });
-        rootTable.add(nextRoundButton).width(180).height(70).colspan(3).center();
+        rootTable.add(nextRoundButton).width(400).height(150).colspan(3).center();
+    }
+
+    private void buildPyramid(char[] letters) {
+        float tileSize = 180f;
+        int index = 0;
+        pyramidContainer.clear();
+        letterButtons.clear();
+        int[] rowLayout = {1, 2, 3};
+        for (int rowCount : rowLayout) {
+            Table row = new Table();
+            for (int i = 0; i < rowCount && index < letters.length; i++) {
+                row.add(createTile(letters[index++], tileSize)).size(tileSize).pad(10);
+            }
+            pyramidContainer.add(row).colspan(3).padBottom(15).center();
+            pyramidContainer.row();
+        }
+    }
+
+    private TextButton createTile(char letter, float size) {
+        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
+        style.up = new TextureRegionDrawable(new TextureRegion(blockTexture));
+        style.font = cinzelFont;
+
+        TextButton tile = new TextButton(String.valueOf(letter), style);
+        tile.getLabel().setFontScale(3.5f);
+        tile.getLabel().setAlignment(Align.center);
+        tile.setSize(size, size);
+
+        tile.addListener(new ClickListener() {
+            @Override public void clicked(InputEvent event, float x, float y) {
+                if (tile.isDisabled()) return;
+                currentWord.append(letter);
+                wordLabel.setText(currentWord.toString());
+            }
+        });
+
+        letterButtons.add(tile);
+        return tile;
     }
 
     private void showLeaveConfirmation() {
@@ -236,43 +274,6 @@ public class GameView extends ScreenAdapter {
                 (stage.getViewport().getWorldHeight() - dialog.getHeight()) / 2f
         );
         stage.addActor(dialog);
-    }
-
-    private void buildPyramid(char[] letters) {
-        float tileSize = 90f;
-        int index = 0;
-        pyramidContainer.clear();
-        letterButtons.clear();
-        int[] rowLayout = {1, 2, 3};
-        for (int rowCount : rowLayout) {
-            Table row = new Table();
-            for (int i = 0; i < rowCount && index < letters.length; i++) {
-                row.add(createTile(letters[index++], tileSize)).size(tileSize).pad(5);
-            }
-            pyramidContainer.add(row).colspan(3).padBottom(10).center();
-            pyramidContainer.row();
-        }
-    }
-
-    private TextButton createTile(char letter, float size) {
-        TextButton.TextButtonStyle style = new TextButton.TextButtonStyle();
-        style.up = new TextureRegionDrawable(new TextureRegion(blockTexture));
-        style.font = cinzelFont;
-
-        TextButton tile = new TextButton(String.valueOf(letter), style);
-        tile.getLabel().setFontScale(2f);
-        tile.setSize(size, size);
-
-        tile.addListener(new ClickListener() {
-            @Override public void clicked(InputEvent event, float x, float y) {
-                if (tile.isDisabled()) return;
-                currentWord.append(letter);
-                wordLabel.setText(currentWord.toString());
-            }
-        });
-
-        letterButtons.add(tile);
-        return tile;
     }
 
     private Drawable createSolidColorDrawable(float r, float g, float b, float a) {

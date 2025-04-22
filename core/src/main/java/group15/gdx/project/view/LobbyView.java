@@ -16,7 +16,6 @@ import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
-import com.badlogic.gdx.scenes.scene2d.utils.Drawable;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 import group15.gdx.project.Launcher;
@@ -42,7 +41,8 @@ public class LobbyView extends ScreenAdapter {
 
     private Texture backgroundTexture;
     private Texture startGameTexture;
-    private Texture infoTexture;
+    private Texture leaveGameTexture;
+    private Texture endGameTexture;
 
     private BitmapFont cinzelFont;
 
@@ -60,10 +60,11 @@ public class LobbyView extends ScreenAdapter {
 
         backgroundTexture = new Texture("background.png");
         startGameTexture = new Texture("startgame.png");
-        infoTexture = new Texture("info_button.png");
+        leaveGameTexture = new Texture("leavegame.png");
+        endGameTexture = new Texture("endgame.png");
 
         skin = new Skin(Gdx.files.internal("vhs.json"));
-        cinzelFont = loadCinzelFont(28);
+        cinzelFont = loadCinzelFont(48);
         skin.get(Label.LabelStyle.class).font = cinzelFont;
 
         setupUI();
@@ -71,76 +72,84 @@ public class LobbyView extends ScreenAdapter {
     }
 
     private void setupUI() {
-        float screenWidth = stage.getViewport().getWorldWidth();
-        float screenHeight = stage.getViewport().getWorldHeight();
-        float baseFont = screenHeight / 40f;
-
-        Table root = new Table(skin);
+        Table root = new Table();
         root.setFillParent(true);
-        root.top().padTop(screenHeight * 0.03f);
         stage.addActor(root);
+
+        Table content = new Table();
+        content.top().padTop(80).padLeft(60).padRight(60);
+        content.defaults().padBottom(40);
 
         // Title
         Label title = new Label(WELCOME_MESSAGE, skin);
         title.setColor(0, 0, 0, 1);
-        title.setFontScale(2f);
-        root.add(title).colspan(2).padBottom(20).center();
-        root.row();
+        title.setFontScale(1.8f);
+        content.add(title).center().colspan(2);
+        content.row();
 
         // Game PIN
-        String pin = session.getLobby().getPin();
-        Label pinLabel = new Label("Game PIN: " + pin, skin);
-        pinLabel.setFontScale(baseFont / 20f);
-        root.add(pinLabel).colspan(2).padBottom(screenHeight * 0.02f).center();
-        root.row();
+        Label pinLabel = new Label("Game PIN: " + session.getLobby().getPin(), skin);
+        pinLabel.setFontScale(1.7f);
+        content.add(pinLabel).center().colspan(2);
+        content.row();
 
         // Players header
         Label playersLabel = new Label(PLAYERS_IN_LOBBY, skin);
-        playersLabel.setFontScale(baseFont / 22f);
-        root.add(playersLabel).colspan(2).padBottom(screenHeight * 0.02f).center();
+        playersLabel.setFontScale(1.5f);
+        content.add(playersLabel).center().colspan(2);
+        content.row();
+
+        // Player list
+        playerListTable = new Table();
+        content.add(playerListTable).fillX().center().colspan(2);
+        content.row();
+
+        root.add(content).expand().fill();
         root.row();
 
-        // Player list table
-        playerListTable = new Table(skin);
-        playerListTable.top();
-        root.add(playerListTable).colspan(2).fillX();
-        root.row();
+        // Bottom sticky buttons
+        Table bottomBar = new Table();
+        bottomBar.bottom().padBottom(60);
 
-        // Host-only button
         if (isHost()) {
-            ImageButton startButton = new ImageButton(
-                    new TextureRegionDrawable(new TextureRegion(startGameTexture)));
+            ImageButton startButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(startGameTexture)));
             startButton.addListener(new ClickListener() {
                 @Override
                 public void clicked(InputEvent ev, float x, float y) {
                     if (session.getLobby().getPlayers().isEmpty()) return;
-
                     LetterSet set = session.getGameController().generateLetters();
                     controller.startGame(session.getLobby().getPin(), set);
                 }
             });
-            root.add(startButton)
-                .size(440, 160)
-                .padTop(40)
-                .colspan(2)
-                .fill()
-                .center();
-            root.row();
+
+            ImageButton endButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(endGameTexture)));
+            endButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent ev, float x, float y) {
+                    controller.leaveGame(session.getLobby().getPin(), session.getLocalPlayer().getId(), () -> {
+                        Gdx.app.postRunnable(() ->
+                                game.setScreen(new LogInView(game, session, controller)));
+                    });
+                }
+            });
+
+            bottomBar.add(startButton).size(400, 160).padRight(40);
+            bottomBar.add(endButton).size(400, 160);
+        } else {
+            ImageButton leaveButton = new ImageButton(new TextureRegionDrawable(new TextureRegion(leaveGameTexture)));
+            leaveButton.addListener(new ClickListener() {
+                @Override
+                public void clicked(InputEvent ev, float x, float y) {
+                    controller.leaveGame(session.getLobby().getPin(), session.getLocalPlayer().getId(), () -> {
+                        Gdx.app.postRunnable(() ->
+                                game.setScreen(new LogInView(game, session, controller)));
+                    });
+                }
+            });
+            bottomBar.add(leaveButton).size(400, 160).colspan(2);
         }
 
-        // Info icon overlay (top right)
-        Drawable infoDrawable = new TextureRegionDrawable(new TextureRegion(infoTexture));
-        ImageButton infoButton = new ImageButton(infoDrawable);
-        infoButton.addListener(evt -> {
-            if (!infoButton.isPressed()) return false;
-            game.setScreen(new HowToPlayView(game, session, controller));
-            return true;
-        });
-
-        Table overlay = new Table(skin);
-        overlay.setFillParent(true);
-        overlay.top().right().pad(10);
-        stage.addActor(overlay);
+        root.add(bottomBar).fillX().bottom().padBottom(60);
     }
 
     private void startListeningForLobbyUpdates() {
@@ -162,13 +171,10 @@ public class LobbyView extends ScreenAdapter {
 
     private void refreshPlayerList() {
         playerListTable.clearChildren();
-        float screenHeight = stage.getViewport().getWorldHeight();
-        float baseFont = screenHeight / 40f;
-
         for (Player p : session.getLobby().getPlayers()) {
             Label name = new Label(p.getNickname(), skin);
-            name.setFontScale(baseFont / 24f);
-            playerListTable.add(name).pad(5).center();
+            name.setFontScale(1.4f);
+            playerListTable.add(name).padBottom(20).center();
             playerListTable.row();
         }
     }
@@ -190,22 +196,19 @@ public class LobbyView extends ScreenAdapter {
 
     @Override
     public void render(float delta) {
-        // 1) Wipe the screen to your lobby’s background color
-        Gdx.gl.glClearColor(0.95f, 0.90f, 0.80f, 1f); // adjust to your exact beige
+        Gdx.gl.glClearColor(0.95f, 0.90f, 0.80f, 1f);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
 
-        // 2) Draw your background quad
         batch.setProjectionMatrix(stage.getCamera().combined);
         batch.begin();
         batch.draw(
-            backgroundTexture,
-            0, 0,
-            stage.getViewport().getWorldWidth(),
-            stage.getViewport().getWorldHeight()
+                backgroundTexture,
+                0, 0,
+                stage.getViewport().getWorldWidth(),
+                stage.getViewport().getWorldHeight()
         );
         batch.end();
 
-        // 3) Lay on your UI
         stage.act(delta);
         stage.draw();
     }
@@ -216,9 +219,9 @@ public class LobbyView extends ScreenAdapter {
         batch.dispose();
         backgroundTexture.dispose();
         startGameTexture.dispose();
-        infoTexture.dispose();
+        leaveGameTexture.dispose();
+        endGameTexture.dispose();
         cinzelFont.dispose();
         skin.dispose();
     }
 }
-
